@@ -1,41 +1,35 @@
-#include <stdio.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+
+#include <iostream>
+
 int main() {
+    glfwInit();
 
-    GLFWwindow* window;
-    int width, height;
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
 
-    if( !glfwInit() )
-    {
-        fprintf( stderr, "Failed to initialize GLFW\n" );
-            return 0;
-    }
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-    glfwWindowHint(GLFW_DEPTH_BITS, 16);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+    std::cout << extensionCount << " extensions supported\n";
 
-    window = glfwCreateWindow( 300, 300, "Gears", NULL, NULL );
-    if (!window)
-    {
-        fprintf( stderr, "Failed to open GLFW window\n" );
-        glfwTerminate();
-        return 0;
-    }
+    glm::mat4 matrix;
+    glm::vec4 vec;
+    auto test = matrix * vec;
 
-    while( !glfwWindowShouldClose(window) )
-    {
-
-        // Swap buffers
-        glfwSwapBuffers(window);
+    while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
     }
 
-    // Terminate GLFW
+    glfwDestroyWindow(window);
+
     glfwTerminate();
 
-	printf("Hello World!!"); 
-    
     return 0;
-
 }
