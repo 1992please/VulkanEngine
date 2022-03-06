@@ -1,5 +1,5 @@
 @echo off
+@echo "------------------------- configuring -------------------------"
+cmake -S . -B build/
 @echo "------------------------- building -------------------------"
-cmake --build ./build/ --config Release
-@echo "------------------------- running -------------------------"
-.\build\Release\VulkanEngine.exe
+cmake --build ./build/ --config Debug
