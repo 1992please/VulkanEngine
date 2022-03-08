@@ -28,6 +28,12 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER Engine)
 set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD_REQUIRED ON)
 
+# set debugging working directory
+set_property(TARGET ${TARGET} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# set startup project
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TARGET})
+
 #deciding files to add to project
 file(GLOB_RECURSE PROJECT_SOURCE_FILES LIST_DIRECTORIES false RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} source/*.h source/*.hpp source/*.c??)
 

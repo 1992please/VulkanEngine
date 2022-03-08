@@ -3,6 +3,7 @@
 //std
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 namespace ve
 {
@@ -64,6 +65,9 @@ namespace ve
         const std::string &vertFilePath, 
         const std::string &fragFilePath)
     {
+		//assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
+		//assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no renderPass provided in configInfo");
+
         std::vector<char> vertCode = readFile(vertFilePath);
         std::vector<char> fragCode = readFile(fragFilePath);
 
@@ -87,14 +91,16 @@ namespace ve
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo;
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.pVertexAttributeDescriptions = 0;
         vertexInputInfo.vertexBindingDescriptionCount = 0;
         vertexInputInfo.pVertexAttributeDescriptions = nullptr;
         vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.flags = 0;
+        vertexInputInfo.pNext = nullptr;
 
-        VkGraphicsPipelineCreateInfo pipelineInfo;
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = 2;
         pipelineInfo.pStages = shaderStages;
@@ -102,6 +108,7 @@ namespace ve
         pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
         pipelineInfo.pViewportState = &configInfo.viewportInfo;
         pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
+        pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
         pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
         pipelineInfo.pDepthStencilState = &configInfo.depthStencilInfo;
         pipelineInfo.pDynamicState = nullptr;
@@ -112,7 +119,8 @@ namespace ve
 
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-
+        pipelineInfo.pNext = nullptr;
+        pipelineInfo.flags = 0;
         if(vkCreateGraphicsPipelines(veDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
             throw std::runtime_error("failed to create graphics pipeline");
     }
@@ -120,7 +128,7 @@ namespace ve
     PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height)
     {
         // configuring fixed functions of the pipeline (Input assemply stage and Rasterization stage)
-        PipelineConfigInfo configInfo;
+        PipelineConfigInfo configInfo{};
 
         // Input Assemply stage:
         configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -142,6 +150,8 @@ namespace ve
         configInfo.viewportInfo.pViewports = nullptr;
         configInfo.viewportInfo.scissorCount = 1;
         configInfo.viewportInfo.pScissors = nullptr;
+        configInfo.viewportInfo.flags = 0;
+        configInfo.viewportInfo.pNext = nullptr;
 
         // Rasterization stage:
         configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -155,6 +165,8 @@ namespace ve
         configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
         configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
         configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
+        configInfo.rasterizationInfo.flags = 0;
+        configInfo.rasterizationInfo.pNext = nullptr;
 
         configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
@@ -163,6 +175,8 @@ namespace ve
         configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
         configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
         configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
+        configInfo.multisampleInfo.flags = 0;
+        configInfo.multisampleInfo.pNext = nullptr;
 
         // color controls how combine colors in our frame buffer
         configInfo.colorBlendAttachment.colorWriteMask =
@@ -185,6 +199,8 @@ namespace ve
         configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
         configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
         configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
+        configInfo.colorBlendInfo.flags = 0;
+        configInfo.colorBlendInfo.pNext = nullptr;
 
         configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
@@ -196,6 +212,8 @@ namespace ve
         configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
         configInfo.depthStencilInfo.front = {};  // Optional
         configInfo.depthStencilInfo.back = {};   // Optional
+        configInfo.depthStencilInfo.flags = 0;
+        configInfo.depthStencilInfo.pNext = nullptr;
 
         configInfo.pipelineLayout = VK_NULL_HANDLE;
         configInfo.renderPass = VK_NULL_HANDLE;
