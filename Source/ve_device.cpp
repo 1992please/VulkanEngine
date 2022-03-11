@@ -82,9 +82,7 @@ namespace ve
     void VeDevice::createInstance()
     {
         if (enableValidationLayers && !checkValidationLayerSupport())
-        {
             throw std::runtime_error("validation layers requested, but not available!");
-        }
 
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -118,9 +116,7 @@ namespace ve
         }
 
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to create instance!");
-        }
 
         hasGflwRequiredInstanceExtensions();
     }
@@ -130,9 +126,8 @@ namespace ve
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
         if (deviceCount == 0)
-        {
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
-        }
+
         std::cout << "Device count: " << deviceCount << std::endl;
         std::vector<VkPhysicalDevice> devices(deviceCount);
         vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -147,9 +142,7 @@ namespace ve
         }
 
         if (physicalDevice == VK_NULL_HANDLE)
-        {
             throw std::runtime_error("failed to find a suitable GPU!");
-        }
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
         std::cout << "physical device: " << properties.deviceName << std::endl;
@@ -199,9 +192,7 @@ namespace ve
         }
 
         if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to create logical device!");
-        }
 
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
@@ -218,9 +209,7 @@ namespace ve
             VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
         if (vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to create command pool!");
-        }
     }
 
     void VeDevice::createSurface() { window.createWindowSurface(instance, &surface_); }
@@ -266,9 +255,7 @@ namespace ve
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         populateDebugMessengerCreateInfo(createInfo);
         if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to set up debug messenger!");
-        }
     }
 
     bool VeDevice::checkValidationLayerSupport()
@@ -338,9 +325,7 @@ namespace ve
         {
             //std::cout << "\t" << required << std::endl;
             if (available.find(required) == available.end())
-            {
                 throw std::runtime_error("Missing required glfw extension");
-            }
         }
     }
 
@@ -482,9 +467,7 @@ namespace ve
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         if (vkCreateBuffer(device_, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to create vertex buffer!");
-        }
 
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(device_, buffer, &memRequirements);
@@ -495,9 +478,7 @@ namespace ve
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
         if (vkAllocateMemory(device_, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to allocate vertex buffer memory!");
-        }
 
         vkBindBufferMemory(device_, buffer, bufferMemory, 0);
     }
@@ -584,9 +565,7 @@ namespace ve
         VkDeviceMemory &imageMemory)
     {
         if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to create image!");
-        }
 
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(device_, image, &memRequirements);
@@ -597,14 +576,10 @@ namespace ve
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
         if (vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to allocate image memory!");
-        }
 
         if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to bind image memory!");
-        }
     }
 
 } // namespace lve

@@ -13,7 +13,6 @@ namespace ve
         const std::string &vertFilePath, 
         const std::string &fragFilePath): veDevice(device)
     {
-        std::cout << "create graphics pipeline\n";
         createGraphicsPipeline(configInfo, vertFilePath, fragFilePath);
     }
 
@@ -139,7 +138,12 @@ namespace ve
             throw std::runtime_error("failed to create graphics pipeline");
     }
 
-    PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height)
+	void VePipeline::bind(VkCommandBuffer commandBuffer)
+	{
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	}
+
+	PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height)
     {
         // configuring fixed functions of the pipeline (Input assemply stage and Rasterization stage)
         PipelineConfigInfo configInfo{};
