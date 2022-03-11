@@ -13,8 +13,6 @@ namespace ve
         const std::string &vertFilePath, 
         const std::string &fragFilePath): veDevice(device)
     {
-        configInfo.viewportInfo.pViewports = &configInfo.viewport;
-        configInfo.viewportInfo.pScissors = &configInfo.scissor;
         std::cout << "create graphics pipeline\n";
         createGraphicsPipeline(configInfo, vertFilePath, fragFilePath);
     }
@@ -65,8 +63,8 @@ namespace ve
         const std::string &vertFilePath, 
         const std::string &fragFilePath)
     {
-		//assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
-		//assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no renderPass provided in configInfo");
+		assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
+		assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no renderPass provided in configInfo");
 
         std::vector<char> vertCode = readFile(vertFilePath);
         std::vector<char> fragCode = readFile(fragFilePath);
@@ -97,8 +95,24 @@ namespace ve
         vertexInputInfo.vertexBindingDescriptionCount = 0;
         vertexInputInfo.pVertexAttributeDescriptions = nullptr;
         vertexInputInfo.pVertexBindingDescriptions = nullptr;
-        vertexInputInfo.flags = 0;
-        vertexInputInfo.pNext = nullptr;
+
+        VkPipelineViewportStateCreateInfo viewportInfo{};
+        viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportInfo.viewportCount = 1;
+        viewportInfo.pViewports = &configInfo.viewport;
+        viewportInfo.scissorCount = 1;
+        viewportInfo.pScissors = &configInfo.scissor;
+
+        VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
+		colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		colorBlendInfo.logicOpEnable = VK_FALSE;
+		colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
+		colorBlendInfo.attachmentCount = 1;
+        colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
+		colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
+		colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
+		colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
+		colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -106,10 +120,10 @@ namespace ve
         pipelineInfo.pStages = shaderStages;
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
-        pipelineInfo.pViewportState = &configInfo.viewportInfo;
+        pipelineInfo.pViewportState = &viewportInfo;
         pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
         pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
-        pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
+        pipelineInfo.pColorBlendState = &colorBlendInfo;
         pipelineInfo.pDepthStencilState = &configInfo.depthStencilInfo;
         pipelineInfo.pDynamicState = nullptr;
 
@@ -145,14 +159,6 @@ namespace ve
         configInfo.scissor.offset = {0, 0};
         configInfo.scissor.extent = {width, height};
 
-        configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        configInfo.viewportInfo.viewportCount = 1;
-        configInfo.viewportInfo.pViewports = nullptr;
-        configInfo.viewportInfo.scissorCount = 1;
-        configInfo.viewportInfo.pScissors = nullptr;
-        configInfo.viewportInfo.flags = 0;
-        configInfo.viewportInfo.pNext = nullptr;
-
         // Rasterization stage:
         configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         configInfo.rasterizationInfo.depthClampEnable = VK_FALSE; // we don't want vertices with depth out of range of min and max depth to be clamped and rendered to screen.
@@ -165,8 +171,6 @@ namespace ve
         configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
         configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
         configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
-        configInfo.rasterizationInfo.flags = 0;
-        configInfo.rasterizationInfo.pNext = nullptr;
 
         configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
@@ -175,8 +179,6 @@ namespace ve
         configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
         configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
         configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
-        configInfo.multisampleInfo.flags = 0;
-        configInfo.multisampleInfo.pNext = nullptr;
 
         // color controls how combine colors in our frame buffer
         configInfo.colorBlendAttachment.colorWriteMask =
@@ -190,18 +192,6 @@ namespace ve
         configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
         configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
 
-        configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
-        configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
-        configInfo.colorBlendInfo.attachmentCount = 1;
-        configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
-        configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
-        configInfo.colorBlendInfo.flags = 0;
-        configInfo.colorBlendInfo.pNext = nullptr;
-
         configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
         configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
@@ -212,8 +202,6 @@ namespace ve
         configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
         configInfo.depthStencilInfo.front = {};  // Optional
         configInfo.depthStencilInfo.back = {};   // Optional
-        configInfo.depthStencilInfo.flags = 0;
-        configInfo.depthStencilInfo.pNext = nullptr;
 
         configInfo.pipelineLayout = VK_NULL_HANDLE;
         configInfo.renderPass = VK_NULL_HANDLE;
