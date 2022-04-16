@@ -9,6 +9,7 @@ namespace ve
 
 	FirstApp::FirstApp()
 	{
+        loadModels();
         createPipelineLayout();
         createPipeline();
         createCommandBuffers();
@@ -32,7 +33,52 @@ namespace ve
         vkDeviceWaitIdle(veDevice.device());
     }
 
-    void FirstApp::createPipelineLayout()
+    std::vector<VeModel::Vertex> generateInnerTraingles(std::vector<VeModel::Vertex>& inVerteces, int depth)
+    {
+        std::vector<VeModel::Vertex> outVerteces;
+        for (int i = 0; i < inVerteces.size(); i += 3)
+        {
+			std::vector<VeModel::Vertex> vertices{
+				{(inVerteces[i].position + inVerteces[i + 1].position) * 0.5f},
+				{(inVerteces[i + 1].position + inVerteces[i + 2].position) *0.5f},
+				{(inVerteces[i + 2].position + inVerteces[i].position) * 0.5f}
+			};
+
+			outVerteces.push_back(inVerteces[i]);
+			outVerteces.push_back(vertices[0]);
+			outVerteces.push_back(vertices[2]);
+
+			outVerteces.push_back(vertices[0]);
+			outVerteces.push_back(inVerteces[i + 1]);
+			outVerteces.push_back(vertices[1]);
+
+			outVerteces.push_back(vertices[2]);
+            outVerteces.push_back(vertices[1]);
+			outVerteces.push_back(inVerteces[i + 2]);
+        }
+        if (depth > 0)
+        {
+            outVerteces = generateInnerTraingles(outVerteces, --depth);
+        }
+        return outVerteces;
+    }
+
+    //std::vector<VeModel::Vertex> generateVertices()
+    //{
+
+    //}
+	void FirstApp::loadModels()
+	{
+        std::vector<VeModel::Vertex> vertices{
+			{{0.0f, -0.7f}},
+			{{0.7f, 0.7f}},
+			{{-0.7f, 0.7f}}
+        };
+        vertices = generateInnerTraingles(vertices, 5);
+        veModel = std::make_unique<VeModel>(veDevice, vertices);
+	}
+
+	void FirstApp::createPipelineLayout()
     {
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -50,7 +96,7 @@ namespace ve
         PipelineConfigInfo pipelineConfig = VePipeline::defaultPipelineConfigInfo(veSwapChain.width(), veSwapChain.height());
         pipelineConfig.renderPass = veSwapChain.getRenderPass();
         pipelineConfig.pipelineLayout = pipelineLayout;
-        vePipeline = std::make_unique<VePipeline>(veDevice, pipelineConfig, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv");
+        vePipeline = std::make_unique<VePipeline>(veDevice, pipelineConfig, "compiled_shaders/simple_shader.vert.spv", "compiled_shaders/simple_shader.frag.spv");
     }
 
     void FirstApp::createCommandBuffers()
@@ -95,7 +141,8 @@ namespace ve
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
             {
                 vePipeline->bind(commandBuffers[i]);
-                vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+                veModel->bind(commandBuffers[i]);
+                veModel->draw(commandBuffers[i]);
             }    
             vkCmdEndRenderPass(commandBuffers[i]);
             if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)

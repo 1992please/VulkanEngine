@@ -4,6 +4,7 @@
 #include "ve_pipeline.h"
 #include "ve_device.h"
 #include "ve_swap_chain.h"
+#include "ve_model.h"
 
 // std
 #include <memory>
@@ -24,6 +25,7 @@ namespace ve
         void run();
 
     private:
+        void loadModels();
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
@@ -35,5 +37,6 @@ namespace ve
         std::unique_ptr<VePipeline> vePipeline;
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
+        std::unique_ptr<VeModel> veModel;
     };
 }

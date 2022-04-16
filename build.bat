@@ -3,4 +3,3 @@
 cmake -S . -B build/
 echo "------------------------- building -------------------------"
 cmake --build ./build/ --config Debug
-@REM cmake --build ./build/ --target Shaders
