@@ -70,11 +70,11 @@ namespace ve
 	void FirstApp::loadModels()
 	{
         std::vector<VeModel::Vertex> vertices{
-			{{0.0f, -0.7f}},
-			{{0.7f, 0.7f}},
-			{{-0.7f, 0.7f}}
+            {{0.0f, -0.7f}, {1.0f, 0.0f, 0.0f}},
+			{{0.7f, 0.7f}, {0.0f, 1.0f, 0.0f}},
+			{{-0.7f, 0.7f}, {0.0f, 0.0f, 1.0f}}
         };
-        vertices = generateInnerTraingles(vertices, 5);
+        //vertices = generateInnerTraingles(vertices, 10);
         veModel = std::make_unique<VeModel>(veDevice, vertices);
 	}
 
