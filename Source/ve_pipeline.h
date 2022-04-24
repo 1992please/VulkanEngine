@@ -10,16 +10,22 @@ namespace ve
 {
     struct PipelineConfigInfo 
     {
-        VkViewport viewport;
-        VkRect2D scissor;
+        PipelineConfigInfo() = default;
+        PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+        PipelineConfigInfo operator=(const PipelineConfigInfo&) = delete;
+
+        VkPipelineViewportStateCreateInfo viewportInfo;
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         VkPipelineRasterizationStateCreateInfo rasterizationInfo;
         VkPipelineMultisampleStateCreateInfo multisampleInfo;
         VkPipelineColorBlendAttachmentState colorBlendAttachment;
         VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
-        VkPipelineLayout pipelineLayout = nullptr;
-        VkRenderPass renderPass = nullptr;
-        uint32_t subpass = 0;
+        std::vector<VkDynamicState> dynamicStateEnables;
+        VkPipelineDynamicStateCreateInfo dynamicStateInfo;
+
+        VkPipelineLayout pipelineLayout;
+        VkRenderPass renderPass;
+        uint32_t subpass;
     };
 
     class VePipeline
@@ -27,16 +33,16 @@ namespace ve
     public:
         VePipeline(
             VeDevice& device, 
-            PipelineConfigInfo configInfo,  
+            const PipelineConfigInfo& configInfo,  
             const std::string &vertFilePath, 
             const std::string &fragFilePath);
         
         ~VePipeline();
         VePipeline(const VePipeline&) = delete;
-        void operator=(const VePipeline&) = delete;
+        VePipeline operator=(const VePipeline&) = delete;
 
         void bind(VkCommandBuffer commandBuffer);
-        static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
     private:
         static std::vector<char> readFile(const std::string &filePath);
 

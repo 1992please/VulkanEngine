@@ -30,12 +30,13 @@ set_property(TARGET ${MainTarget} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${MainTarget})
 
 #deciding files to add to project
-file(GLOB_RECURSE PROJECT_SOURCE_FILES LIST_DIRECTORIES false RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} source/*.h source/*.hpp source/*.c??)
+file(GLOB_RECURSE PROJECT_SOURCE_FILES LIST_DIRECTORIES false RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} source/*.h source/*.hpp source/*.c?? shaders/*.frag shaders/*.vert)
+file(GLOB_RECURSE SHADER_SOURCE_FILES LIST_DIRECTORIES false RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} shaders/*.frag shaders/*.vert)
 
 target_sources(${MainTarget} PRIVATE ${PROJECT_SOURCE_FILES})
 
 # set up visual studio groups
-foreach(FILE ${PROJECT_SOURCE_FILES})
+foreach(FILE ${PROJECT_SOURCE_FILES} ${SHADER_SOURCE_FILES})
 	get_filename_component(PARENT_DIR "${FILE}" PATH)
 
 	# skip src or include and changes /'s to \\'s
@@ -63,9 +64,12 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
 	"${PROJECT_SOURCE_DIR}/shaders/*.vert"
 )
  
-foreach(GLSL ${GLSL_SOURCE_FILES})
-	get_filename_component(FILE_NAME ${GLSL} NAME)
-	set(SPIRV "${PROJECT_SOURCE_DIR}/compiled_shaders/${FILE_NAME}.spv")
+foreach(GLSL ${SHADER_SOURCE_FILES})
+	# get_filename_component(FILE_NAME ${GLSL} NAME)
+	string(REPLACE "shaders/" "compiled_shaders/" SPIRV "${CMAKE_CURRENT_SOURCE_DIR}/${GLSL}.spv")
+	set(GLSL "${PROJECT_SOURCE_DIR}/${GLSL}")
+	message("GLSL: ${GLSL}, \nSPIRV: ${SPIRV}\n")
+	# set(SPIRV "${PROJECT_SOURCE_DIR}/compiled_shaders/${FILE_NAME}.spv")
 	add_custom_command(
 		OUTPUT ${SPIRV}
 		COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}

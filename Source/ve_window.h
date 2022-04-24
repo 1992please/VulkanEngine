@@ -11,19 +11,27 @@ namespace ve
     public:
         VeWindow(int w, int h, std::string name);
         ~VeWindow();
+
+		// Remove copy constructor
+		VeWindow(const VeWindow&) = delete;
+		VeWindow& operator=(const VeWindow&) = delete;
+
         bool shouldClose() { return glfwWindowShouldClose(window); }
         VkExtent2D getExtent() { return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) }; }
+        bool wasWindowResized() { return frameBufferResized; }
+        void resetWindowResizedFlag() { frameBufferResized = false; }
+
         void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
-        // Remove copy constructor
-        VeWindow(const VeWindow &) = delete;
-        VeWindow &operator=(const VeWindow &) = delete;
-
     private:
-        GLFWwindow *window;
+        static void frameBufferResizedCallback(GLFWwindow* window, int width, int height);
         void initWindow();
-        const int width;
-        const int height;
+
+        int width;
+        int height;
+        bool frameBufferResized;
+
         std::string windowName;
+        GLFWwindow *window;
     };
 }
