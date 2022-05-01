@@ -4,7 +4,7 @@
 #include "ve_pipeline.h"
 #include "ve_device.h"
 #include "ve_swap_chain.h"
-#include "ve_model.h"
+#include "ve_game_object.h"
 
 // std
 #include <memory>
@@ -25,7 +25,7 @@ namespace ve
         void run();
 
     private:
-        void loadModels();
+        void loadGameObjects();
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
@@ -33,6 +33,7 @@ namespace ve
         void drawFrame();
         void recreateSwapChain();
         void recordCommandBuffer(int imageIndex);
+        void renderGameObjects(VkCommandBuffer commandBuffer);
 
         VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
         VeDevice veDevice{veWindow};
@@ -40,6 +41,6 @@ namespace ve
         std::unique_ptr<VePipeline> vePipeline;
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
-        std::unique_ptr<VeModel> veModel;
+        std::vector<VeGameObject> gameObjects;
     };
 }

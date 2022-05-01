@@ -3,7 +3,6 @@
 #include "ve_device.h"
 
 // libs
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 // std
