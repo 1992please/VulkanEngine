@@ -45,8 +45,8 @@ namespace ve
 		// update each objects position based on its final velocity
 		for (auto& obj : physicsObjs) 
 		{
-			obj.rigidBody2d.velocity -= dt * obj.rigidBody2d.velocity * .001f;
-			obj.transform2d.translation += dt * obj.rigidBody2d.velocity;
+			if(obj.rigidBody2d.isMovable)
+				obj.transform2d.translation += dt * obj.rigidBody2d.velocity;
 		}
 	}
 

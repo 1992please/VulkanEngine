@@ -11,10 +11,12 @@ namespace ve
 	{
 	public:
 		GravityPhysicsSystem(float strength) : strengthGravity{ strength } {}
-		const float strengthGravity;
+
 		void update(std::vector<VeGameObject>& objs, float dt, unsigned int substeps = 1);
-	private:
 		glm::vec2 computeForce(VeGameObject& fromObj, VeGameObject& toObj) const;
+	private:
 		void stepSimulation(std::vector<VeGameObject>& physicsObjs, float dt);
+
+		const float strengthGravity;
 	};
 }

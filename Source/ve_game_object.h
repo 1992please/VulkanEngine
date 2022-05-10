@@ -29,6 +29,7 @@ namespace ve
     {
         glm::vec2 velocity;
         float mass{1.0f};
+        bool isMovable{ true };
     };
 
     class VeGameObject

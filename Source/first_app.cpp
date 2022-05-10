@@ -2,7 +2,7 @@
 
 #include "systems/simple_render_system.h"
 #include "systems/gravity_physics_system.h"
-
+#include "systems/vec_2_field_system.h"
 // libs
 #include <glm/gtc/constants.hpp>
 
@@ -67,6 +67,10 @@ namespace ve
     {
 		std::vector<VeGameObject> gameObjects{};
 		std::shared_ptr<VeModel> circleModel = createCircleModel(veDevice, 64);
+		std::shared_ptr<VeModel> squareModel = createSquareModel(
+			veDevice,
+			{ .5f, .0f });  // offset model by .5 so rotation occurs at edge rather than center of square
+
 
 		VeGameObject circleA = VeGameObject::createGameObject();
 		circleA.model = circleModel;
@@ -74,35 +78,56 @@ namespace ve
 		circleA.transform2d.translation = { -.5f, -.5f };
 		circleA.transform2d.scale = { .06f, .06f };
 		//circleA.transform2d.rotation = 0.25f * glm::two_pi<float>();
-		circleA.rigidBody2d.velocity = { .005f, .0f };
+		circleA.rigidBody2d.velocity = { .2f, -.3f };
 		gameObjects.push_back(std::move(circleA));
 
 		VeGameObject circleB = VeGameObject::createGameObject();
 		circleB.model = circleModel;
 		circleB.color = { .98f, .72f,  .02f };
-		circleB.transform2d.translation = { .5f, .5f };
+		circleB.transform2d.translation = { 0.f, 0.f };
 		circleB.transform2d.scale = { .06f, .06f };
-		circleB.rigidBody2d.velocity = { -.005f, .0f };
+		//circleB.rigidBody2d.velocity = { -.05f, .0f };
+		circleB.rigidBody2d.mass = 10;
+		circleB.rigidBody2d.isMovable = true;
 		//circleA.transform2d.rotation = 0.25f * glm::two_pi<float>();
 		gameObjects.push_back(std::move(circleB));
 
-		
+		int gridCount = 40;
+		std::vector<VeGameObject> vecFieldObjs{};
+		for (int rowIndex = 0; rowIndex < gridCount; rowIndex++)
+		{
+			for (int colIndex = 0; colIndex < gridCount; colIndex++)
+			{
+				VeGameObject squareObj = VeGameObject::createGameObject();
+				squareObj.model = squareModel;
+				squareObj.color = glm::vec3(1.0f);;
+				squareObj.transform2d.translation = { -1.0 + rowIndex * 2.0f / gridCount, -1.0 + colIndex * 2.0f / gridCount };
+				squareObj.transform2d.scale = glm::vec2(0.005f);;
+				//squareObj.transform2d.rotation = 0.25f * glm::two_pi<float>();
+				//squareObj.rigidBody2d.velocity = { .005f, .0f };
+				vecFieldObjs.push_back(std::move(squareObj));
+			}
+		}
 
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass() };
-		GravityPhysicsSystem gravityPhysicsSystem{ .0001f };
+		GravityPhysicsSystem gravityPhysicsSystem{ .01f };
+		Vec2FieldSystem vec2FieldSystem{};
         while(!veWindow.shouldClose())
         {
             glfwPollEvents();
             
             if (VkCommandBuffer commandBuffer = veRenderer.beginFrame())
             {
-				gravityPhysicsSystem.update(gameObjects, .01f, 5);
+				vec2FieldSystem.update(gravityPhysicsSystem, gameObjects, vecFieldObjs);
+				gravityPhysicsSystem.update(gameObjects, .02f, 5);
+
                 // begin offscreen shadow pass
                 // render shadow casting objects
                 // end offscreen shadow pass
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
+				simpleRenderSystem.renderGameObjects(commandBuffer, vecFieldObjs);
                 veRenderer.endSwapChainRenderPass(commandBuffer);
                 veRenderer.endFrame();
             }
