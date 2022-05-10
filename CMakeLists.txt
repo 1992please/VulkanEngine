@@ -4,6 +4,7 @@ project(VulkanEngine)
 set(MainTarget "${PROJECT_NAME}")
 set(MISC_FOLDER "Misc")
 add_executable(${MainTarget})
+target_include_directories(${MainTarget} PRIVATE source/)
 
 # GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

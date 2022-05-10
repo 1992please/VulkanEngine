@@ -1,9 +1,6 @@
 #pragma once
 
-#include "ve_window.h"
 #include "ve_pipeline.h"
-#include "ve_device.h"
-#include "ve_renderer.h"
 #include "ve_game_object.h"
 
 // std

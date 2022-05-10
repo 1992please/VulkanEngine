@@ -25,6 +25,12 @@ namespace ve
         }
     };
 
+    struct RigidBody2dComponent 
+    {
+        glm::vec2 velocity;
+        float mass{1.0f};
+    };
+
     class VeGameObject
     {
     public:
@@ -47,6 +53,7 @@ namespace ve
         std::shared_ptr<VeModel> model;
         glm::vec3 color{};
         Transform2dComponent transform2d{};
+        RigidBody2dComponent rigidBody2d{};
     private:
         VeGameObject(id_t objId) : id(objId) {}
 
