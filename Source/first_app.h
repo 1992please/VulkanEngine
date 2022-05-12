@@ -24,9 +24,11 @@ namespace ve
         void run();
 
     private:
+        void loadGameObjects();
 
         VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
         VeDevice veDevice{veWindow};
         VeRenderer veRenderer{ veWindow, veDevice };
+        std::vector<VeGameObject> gameObjects{};
     };
 }
