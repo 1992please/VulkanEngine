@@ -1,5 +1,5 @@
 #include "first_app.h"
-
+#include "ve_camera.h"
 #include "systems/simple_render_system.h"
 // libs
 #include <glm/gtc/constants.hpp>
@@ -125,14 +125,22 @@ namespace ve
     {
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass() };
+		VeCamera camera{};
+		
         while(!veWindow.shouldClose())
         {
+            glfwPollEvents();
+
 			for (auto& obj : gameObjects) {
 				obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.0001f, glm::two_pi<float>());
 				obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + 0.00005f, glm::two_pi<float>());
 			}
-            glfwPollEvents();
-            
+
+
+			float aspect = veRenderer.getAspectRatio();
+            // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+			 camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+
             if (VkCommandBuffer commandBuffer = veRenderer.beginFrame())
             {
 
@@ -140,7 +148,7 @@ namespace ve
                 // render shadow casting objects
                 // end offscreen shadow pass
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
+                simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
                 veRenderer.endSwapChainRenderPass(commandBuffer);
                 veRenderer.endFrame();
             }
@@ -158,7 +166,7 @@ namespace ve
 
 		VeGameObject cubeObj = VeGameObject::createGameObject();
 		cubeObj.model = cubeModel;
-		cubeObj.transform.translation = { .0f, .0f, .5f };
+		cubeObj.transform.translation = { .0f, .0f, 2.5f };
 		cubeObj.transform.scale = { .5f, .5f, .5f };
 		gameObjects.push_back(std::move(cubeObj));
 	}

@@ -22,6 +22,7 @@ namespace ve
         VeRenderer &operator=(const VeRenderer &) = delete;
 
         VkRenderPass getSwapChainRenderPass()  const { return veSwapChain->getRenderPass(); }
+        float getAspectRatio() const { return veSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return isFrameStarted; }
         VkCommandBuffer getCurrentCommandBuffer() const { 
             assert(isFrameStarted && "Cannot get command buffer when frame not in progress");

@@ -54,14 +54,14 @@ namespace ve
 		vePipeline = std::make_unique<VePipeline>(veDevice, pipelineConfig, "compiled_shaders/simple_shader.vert.spv", "compiled_shaders/simple_shader.frag.spv");
 	}
 
-	void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VeGameObject>& gameObjects)
+	void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VeGameObject>& gameObjects, const VeCamera& camera)
 	{
 		vePipeline->bind(commandBuffer);
 		for (VeGameObject& obj : gameObjects)
 		{
 			SimplePushConstantData push{};
 			push.color = obj.color;
-			push.transform = obj.transform.mat4();
+			push.transform = camera.getProjection() * obj.transform.mat4();
 
 			vkCmdPushConstants(
 				commandBuffer,

@@ -27,7 +27,7 @@ namespace ve
 		while (extent.width == 0 || extent.height == 0)
 		{
 			glfwWaitEvents();
-			VkExtent2D extent = veWindow.getExtent();
+			extent = veWindow.getExtent();
 		}
 		vkDeviceWaitIdle(veDevice.device());
 
