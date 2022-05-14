@@ -1,12 +1,17 @@
 #include "first_app.h"
 #include "ve_camera.h"
 #include "systems/simple_render_system.h"
+#include "keyboard_movement_controller.h"
+
 // libs
 #include <glm/gtc/constants.hpp>
 
 // std
+#include <chrono>
 #include <stdexcept>
 #include <array>
+
+#define MAX_FRAME_TIME .3f
 
 namespace ve
 {
@@ -126,22 +131,33 @@ namespace ve
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass() };
 		VeCamera camera{};
-		//camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
-		//camera.setViewTarget(glm::vec3(-1.f, -2.f, -20.f), glm::vec3(0.f, 0.f, 2.5f));
-		camera.setViewYXZ(glm::vec3(0.f), glm::vec3(0.f, -0.5f, 0.0f));
+
+		auto viewerObject = VeGameObject::createGameObject();
+		KeyboardMovementController cameraController{};
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
+
         while(!veWindow.shouldClose())
         {
             glfwPollEvents();
 
-			for (auto& obj : gameObjects) {
-				obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.0001f, glm::two_pi<float>());
-				obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + 0.00005f, glm::two_pi<float>());
-			}
+			auto newTime = std::chrono::high_resolution_clock::now();
+			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+			currentTime = newTime;
+			frameTime = glm::min(frameTime, MAX_FRAME_TIME);
 
+			cameraController.moveInPlaneXZ(veWindow.getGLFWwindow(), frameTime, viewerObject);
+			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			float aspect = veRenderer.getAspectRatio();
-            // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-			 camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+			// camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+			camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+
+
+			//for (auto& obj : gameObjects) {
+			//	obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.0001f, glm::two_pi<float>());
+			//	obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + 0.00005f, glm::two_pi<float>());
+			//}
 
             if (VkCommandBuffer commandBuffer = veRenderer.beginFrame())
             {
