@@ -126,7 +126,9 @@ namespace ve
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass() };
 		VeCamera camera{};
-		
+		//camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
+		//camera.setViewTarget(glm::vec3(-1.f, -2.f, -20.f), glm::vec3(0.f, 0.f, 2.5f));
+		camera.setViewYXZ(glm::vec3(0.f), glm::vec3(0.f, -0.5f, 0.0f));
         while(!veWindow.shouldClose())
         {
             glfwPollEvents();
@@ -139,7 +141,7 @@ namespace ve
 
 			float aspect = veRenderer.getAspectRatio();
             // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-			 camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+			 camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
             if (VkCommandBuffer commandBuffer = veRenderer.beginFrame())
             {

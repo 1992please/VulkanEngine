@@ -57,11 +57,14 @@ namespace ve
 	void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VeGameObject>& gameObjects, const VeCamera& camera)
 	{
 		vePipeline->bind(commandBuffer);
+
+		glm::mat4 projectionView = camera.getProjection() * camera.getView(); 
+
 		for (VeGameObject& obj : gameObjects)
 		{
 			SimplePushConstantData push{};
 			push.color = obj.color;
-			push.transform = camera.getProjection() * obj.transform.mat4();
+			push.transform = projectionView * obj.transform.mat4();
 
 			vkCmdPushConstants(
 				commandBuffer,
