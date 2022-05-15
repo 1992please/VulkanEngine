@@ -6,28 +6,41 @@
 
 namespace ve
 {
-	VeModel::VeModel(VeDevice& device, const std::vector<Vertex>& vertices)
-		: veDevice(device)
+	VeModel::VeModel(VeDevice& device, const VeModel::Builder& builder)
+		: veDevice(device), hasIndexBuffer(false)
 	{
-		createVertexBuffers(vertices);
-	}
-
-	void VeModel::bind(VkCommandBuffer commandBuffer)
-	{
-		VkDeviceSize offset = 0;
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
-	}
-
-	void VeModel::draw(VkCommandBuffer commandBuffer)
-	{
-		vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+		createVertexBuffers(builder.vertices);
+		createIndexBuffers(builder.indices);
 	}
 
 	VeModel::~VeModel()
 	{
 		vkDestroyBuffer(veDevice.device(), vertexBuffer, nullptr);
 		vkFreeMemory(veDevice.device(), vertexBufferMemory, nullptr);
+		if (hasIndexBuffer)
+		{
+			vkDestroyBuffer(veDevice.device(), indexBuffer, nullptr);
+			vkFreeMemory(veDevice.device(), indexBufferMemory, nullptr);
+		}
 	}
+
+	void VeModel::bind(VkCommandBuffer commandBuffer)
+	{
+		VkDeviceSize offset = 0;
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
+		if (hasIndexBuffer)
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+	}
+
+	void VeModel::draw(VkCommandBuffer commandBuffer)
+	{
+		if (hasIndexBuffer)
+			vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
+		else
+			vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+	}
+
+
 
 	void VeModel::createVertexBuffers(const std::vector<Vertex>& vertices)
 	{
@@ -35,22 +48,87 @@ namespace ve
 		assert(vertexCount >= 3 && "Vertex count must be at least 3");
 
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
 		// NOTE host means cpu and device means gpu
-		// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT keeps host and device memory regions consistent with each other (if this is absent we will have to flush in order to 
-		// propagate changes from host to device memory)
+		// VK_BUFFER_USAGE_TRANSFER_SRC_BIT tell vulkan that the buffer we are creating is going to be used as the source location for our memroy transfer operation.
+		// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  staging buffer will need to be host visible
+		// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT whenever we change data on the host side to automatically flush that data to the device side
 		veDevice.createBuffer(
 			bufferSize, 
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			vertexBuffer,
-			vertexBufferMemory);
+			stagingBuffer,
+			stagingBufferMemory);
 
 		void* data;
 		// creates a region of host memory mapped to device memory and sets data to point to the beginning of the host mapped memory range.
-		vkMapMemory(veDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(veDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
 		// copy vertices data to the host memory which will automatically be flushed to update the device memory
 		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(veDevice.device(), vertexBufferMemory);
+		vkUnmapMemory(veDevice.device(), stagingBufferMemory);
+
+
+		// VK_BUFFER_USAGE_TRANSFER_DST_BIT this will be the destination of transfering data from staging buffer.
+		// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT the most optimal but it can be accessed only by a staging buffer.
+		veDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			vertexBuffer,
+			vertexBufferMemory);
+
+		veDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(veDevice.device(), stagingBuffer, nullptr);
+		vkFreeMemory(veDevice.device(), stagingBufferMemory, nullptr);
+	}
+
+	void VeModel::createIndexBuffers(const std::vector<uint32_t>& indices)
+	{
+		indexCount = static_cast<uint32_t>(indices.size());
+		hasIndexBuffer = indexCount > 0;
+
+		if (!hasIndexBuffer)
+			return;
+
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		// NOTE host means cpu and device means gpu
+		// VK_BUFFER_USAGE_TRANSFER_SRC_BIT tell vulkan that the buffer we are creating is going to be used as the source location for our memroy transfer operation.
+		// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  staging buffer will need to be host visible
+		// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT whenever we change data on the host side to automatically flush that data to the device side
+		veDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory);
+
+		void* data;
+		// creates a region of host memory mapped to device memory and sets data to point to the beginning of the host mapped memory range.
+		vkMapMemory(veDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		// copy vertices data to the host memory which will automatically be flushed to update the device memory
+		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(veDevice.device(), stagingBufferMemory);
+
+
+		// VK_BUFFER_USAGE_TRANSFER_DST_BIT this will be the destination of transfering data from staging buffer.
+		// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT the most optimal but it can be accessed only by a staging buffer.
+		veDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			indexBuffer,
+			indexBufferMemory);
+
+		veDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+		vkDestroyBuffer(veDevice.device(), stagingBuffer, nullptr);
+		vkFreeMemory(veDevice.device(), stagingBufferMemory, nullptr);
 	}
 
 	std::vector<VkVertexInputBindingDescription> VeModel::Vertex::getBindingDescriptions()

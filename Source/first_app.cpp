@@ -17,104 +17,51 @@ namespace ve
 {
 	// temporary helper function, creates a 1x1x1 cube centered at offset
 	std::unique_ptr<VeModel> createCubeModel(VeDevice& device, glm::vec3 offset) {
-		std::vector<VeModel::Vertex> vertices{
-
+		VeModel::Builder modelBuilder{};
+		modelBuilder.vertices = {
 			// left face (white)
 			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
 			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
 			{{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
 			{{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
 
 			// right face (yellow)
 			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
 			{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
 			{{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
 			{{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-			{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
 
 			// top face (orange, remember y axis points down)
 			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
 			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
 			{{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
 			{{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
 
 			// bottom face (red)
 			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
 			{{.5f, .5f, .5f}, {.8f, .1f, .1f}},
 			{{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
 			{{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-			{{.5f, .5f, .5f}, {.8f, .1f, .1f}},
 
 			// nose face (blue)
 			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
 			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
 			{{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
 			{{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
 
 			// tail face (green)
 			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
 			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
 			{{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
 			{{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-
 		};
-		for (auto& v : vertices) {
+		for (auto& v : modelBuilder.vertices) {
 			v.position += offset;
 		}
-		return std::make_unique<VeModel>(device, vertices);
-	}
 
-	std::unique_ptr<VeModel> createSquareModel(VeDevice& device, glm::vec3 offset) {
-		std::vector<VeModel::Vertex> vertices = {
-			{{0.0f, -0.5f, -0.5f}},
-			{{0.0f, 0.5f, 0.5f}},
-			{{0.0f, -0.5f, 0.5f}},
-			{{0.0f, -0.5f, -0.5f}},
-			{{0.0f, 0.5f, -0.5f}},
-			{{0.0f, 0.5f, 0.5f}},  //
-		};
-		for (auto& v : vertices) {
-			v.position += offset;
-		}
-		return std::make_unique<VeModel>(device, vertices);
-	}
-
-	std::unique_ptr<VeModel> createTriangleModel(VeDevice& device) {
-		std::vector<VeModel::Vertex> vertices = {
-			{{0.0f, -0.5f, -0.5f}},
-			{{0.0f, 0.5f, 0.5f}},
-			{{0.0f, -0.5f, 0.5f}}
-			//
-		};
-
-		return std::make_unique<VeModel>(device, vertices);
-	}
-
-	std::unique_ptr<VeModel> createCircleModel(VeDevice& device, unsigned int numSides) {
-		std::vector<VeModel::Vertex> uniqueVertices{};
-		for (int i = 0; i < numSides; i++) {
-			float angle = i * glm::two_pi<float>() / numSides;
-			uniqueVertices.push_back({ {0.0f, glm::cos(angle), glm::sin(angle)} });
-		}
-		uniqueVertices.push_back({});  // adds center vertex at 0, 0
-
-		std::vector<VeModel::Vertex> vertices{};
-		for (int i = 0; i < numSides; i++) {
-			vertices.push_back(uniqueVertices[i]);
-			vertices.push_back(uniqueVertices[(i + 1) % numSides]);
-			vertices.push_back(uniqueVertices[numSides]);
-		}
-		return std::make_unique<VeModel>(device, vertices);
+		modelBuilder.indices = { 0,  1,  2,  0,  3,  1,  4,  5,  6,  4,  7,  5,  8,  9,  10, 8,  11, 9,
+								12, 13, 14, 12, 15, 13, 16, 17, 18, 16, 19, 17, 20, 21, 22, 20, 23, 21 };
+		return std::make_unique<VeModel>(device, modelBuilder);
 	}
 
 	FirstApp::FirstApp()
