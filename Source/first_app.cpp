@@ -78,12 +78,12 @@ namespace ve
 
 	void FirstApp::loadGameObjects()
 	{
-		std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "content/colored_cube.obj");
+		std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "content/flat_vase.obj");
 
 		VeGameObject gameObj = VeGameObject::createGameObject();
 		gameObj.model = cubeModel;
-		gameObj.transform.translation = { .0f, .0f, 2.5f };
-		gameObj.transform.scale = glm::vec3{ 3.f };
+		gameObj.transform.translation = { .0f, .5f, 2.5f };
+		gameObj.transform.scale = glm::vec3{ 3.f, 1.f, 3.f };
 		gameObjects.push_back(std::move(gameObj));
 	}
 
