@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ve_buffer.h"
 #include "ve_device.h"
 
 // libs
@@ -57,13 +58,11 @@ namespace ve
 
 		VeDevice& veDevice;
 
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
+		std::unique_ptr<VeBuffer> vertexBuffer;
 		uint32_t vertexCount;
 
 		bool hasIndexBuffer;
-		VkBuffer indexBuffer;
-		VkDeviceMemory indexBufferMemory;
+		std::unique_ptr<VeBuffer> indexBuffer;
 		uint32_t indexCount;
 	};
 }

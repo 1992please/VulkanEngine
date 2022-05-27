@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ve_camera.h"
+#include "ve_frame_info.h"
 #include "ve_pipeline.h"
 #include "ve_game_object.h"
 
@@ -15,14 +15,14 @@ namespace ve
 		static constexpr int WIDTH = 800;
 		static constexpr int HEIGHT = 600;
 
-		SimpleRenderSystem(VeDevice& device, VkRenderPass renderPass);
+		SimpleRenderSystem(VeDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 		~SimpleRenderSystem();
 
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 		SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
-		void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VeGameObject>&  gameObjects, const VeCamera& camera);
+		void renderGameObjects(FrameInfo& frameInfo, std::vector<VeGameObject>&  gameObjects);
 	private:
-		void createPipelineLayout();
+		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
 		void createPipeline(VkRenderPass renderPass);
 
 		VeDevice& veDevice;

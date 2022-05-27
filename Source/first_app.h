@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ve_descriptors.h"
 #include "ve_window.h"
 #include "ve_device.h"
 #include "ve_renderer.h"
@@ -29,6 +30,9 @@ namespace ve
         VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
         VeDevice veDevice{veWindow};
         VeRenderer veRenderer{ veWindow, veDevice };
+
+        std::unique_ptr<VeDescriptorPool> globalPool;
         std::vector<VeGameObject> gameObjects{};
+
     };
 }

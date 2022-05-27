@@ -36,13 +36,6 @@ namespace ve
 
 	VeModel::~VeModel()
 	{
-		vkDestroyBuffer(veDevice.device(), vertexBuffer, nullptr);
-		vkFreeMemory(veDevice.device(), vertexBufferMemory, nullptr);
-		if (hasIndexBuffer)
-		{
-			vkDestroyBuffer(veDevice.device(), indexBuffer, nullptr);
-			vkFreeMemory(veDevice.device(), indexBufferMemory, nullptr);
-		}
 	}
 
 	std::unique_ptr<VeModel> VeModel::createModelFromFile(VeDevice& device, const std::string& filepath)
@@ -56,9 +49,9 @@ namespace ve
 	void VeModel::bind(VkCommandBuffer commandBuffer)
 	{
 		VkDeviceSize offset = 0;
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer->getBuffer(), &offset);
 		if (hasIndexBuffer)
-			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 	}
 
 	void VeModel::draw(VkCommandBuffer commandBuffer)
@@ -76,42 +69,36 @@ namespace ve
 		vertexCount = static_cast<uint32_t>(vertices.size());
 		assert(vertexCount >= 3 && "Vertex count must be at least 3");
 
-		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
+		uint32_t vertexSize = sizeof(vertices[0]);
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
 		// NOTE host means cpu and device means gpu
 		// VK_BUFFER_USAGE_TRANSFER_SRC_BIT tell vulkan that the buffer we are creating is going to be used as the source location for our memroy transfer operation.
 		// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  staging buffer will need to be host visible
 		// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT whenever we change data on the host side to automatically flush that data to the device side
-		veDevice.createBuffer(
-			bufferSize, 
+
+		VeBuffer stagingBuffer{
+			veDevice,
+			vertexSize,
+			vertexCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory);
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		};
 
-		void* data;
-		// creates a region of host memory mapped to device memory and sets data to point to the beginning of the host mapped memory range.
-		vkMapMemory(veDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		// copy vertices data to the host memory which will automatically be flushed to update the device memory
-		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(veDevice.device(), stagingBufferMemory);
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void*)vertices.data());
 
+	// VK_BUFFER_USAGE_TRANSFER_DST_BIT this will be the destination of transfering data from staging buffer.
+	// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT the most optimal but it can be accessed only by a staging buffer.
 
-		// VK_BUFFER_USAGE_TRANSFER_DST_BIT this will be the destination of transfering data from staging buffer.
-		// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT the most optimal but it can be accessed only by a staging buffer.
-		veDevice.createBuffer(
-			bufferSize,
+		vertexBuffer = std::make_unique<VeBuffer>(
+			veDevice,
+			vertexSize,
+			vertexCount,
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			vertexBuffer,
-			vertexBufferMemory);
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
 
-		veDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-		vkDestroyBuffer(veDevice.device(), stagingBuffer, nullptr);
-		vkFreeMemory(veDevice.device(), stagingBufferMemory, nullptr);
+		veDevice.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), vertexBuffer->getBufferSize());
 	}
 
 	void VeModel::createIndexBuffers(const std::vector<uint32_t>& indices)
@@ -122,42 +109,35 @@ namespace ve
 		if (!hasIndexBuffer)
 			return;
 
-		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
-
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
+		uint32_t indexSize = sizeof(indices[0]);
 		// NOTE host means cpu and device means gpu
 		// VK_BUFFER_USAGE_TRANSFER_SRC_BIT tell vulkan that the buffer we are creating is going to be used as the source location for our memroy transfer operation.
 		// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  staging buffer will need to be host visible
 		// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT whenever we change data on the host side to automatically flush that data to the device side
-		veDevice.createBuffer(
-			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory);
 
-		void* data;
-		// creates a region of host memory mapped to device memory and sets data to point to the beginning of the host mapped memory range.
-		vkMapMemory(veDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		// copy vertices data to the host memory which will automatically be flushed to update the device memory
-		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(veDevice.device(), stagingBufferMemory);
+		VeBuffer stagingBuffer{
+			veDevice,
+			indexSize,
+			indexCount,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		};
+
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void*)indices.data());
 
 
 		// VK_BUFFER_USAGE_TRANSFER_DST_BIT this will be the destination of transfering data from staging buffer.
 		// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT the most optimal but it can be accessed only by a staging buffer.
-		veDevice.createBuffer(
-			bufferSize,
+		indexBuffer = std::make_unique<VeBuffer>(
+			veDevice,
+			indexSize,
+			indexCount,
 			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			indexBuffer,
-			indexBufferMemory);
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
 
-		veDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-		vkDestroyBuffer(veDevice.device(), stagingBuffer, nullptr);
-		vkFreeMemory(veDevice.device(), stagingBufferMemory, nullptr);
+		veDevice.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), stagingBuffer.getBufferSize());
 	}
 
 	std::vector<VkVertexInputBindingDescription> VeModel::Vertex::getBindingDescriptions()
