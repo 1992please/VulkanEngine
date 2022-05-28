@@ -19,8 +19,10 @@ namespace ve
 {
 	struct GlobalUbo
 	{
-		alignas(16) glm::mat4 projectionView{ 1.0f };
-		alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+		glm::mat4 projectionView{ 1.0f };
+		glm::vec4 ambientLightColor{1.0, 1.0f , 1.0f, .02f}; // w is intensity
+		glm::vec3 LightPosition{-1.f};
+		alignas(16) glm::vec4 lightColor{1.f}; // w is intensity
 	};
 
 	FirstApp::FirstApp()
@@ -71,6 +73,7 @@ namespace ve
 		VeCamera camera{};
 
 		auto viewerObject = VeGameObject::createGameObject();
+		viewerObject.transform.translation.z = -2.5f;
 		KeyboardMovementController cameraController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
@@ -130,12 +133,26 @@ namespace ve
 
 	void FirstApp::loadGameObjects()
 	{
-		std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "content/flat_vase.obj");
+		std::shared_ptr<VeModel> flat_vase = VeModel::createModelFromFile(veDevice, "content/flat_vase.obj");
+		std::shared_ptr<VeModel> smooth_vase = VeModel::createModelFromFile(veDevice, "content/smooth_vase.obj");
+		std::shared_ptr<VeModel> quad = VeModel::createModelFromFile(veDevice, "content/quad.obj");
 
 		VeGameObject gameObj = VeGameObject::createGameObject();
-		gameObj.model = cubeModel;
-		gameObj.transform.translation = { .0f, .5f, 2.5f };
-		gameObj.transform.scale = glm::vec3{ 3.f, 1.f, 3.f };
+		gameObj.model = flat_vase;
+		gameObj.transform.translation = { -.5f, .5f, 0.f };
+		gameObj.transform.scale = glm::vec3{ 3.f, 1.5f, 3.f };
+		gameObjects.push_back(std::move(gameObj));
+
+		gameObj = VeGameObject::createGameObject();
+		gameObj.model = smooth_vase;
+		gameObj.transform.translation = { .5f, .5f, 0.f };
+		gameObj.transform.scale = glm::vec3{ 3.f, 1.5f, 3.f };
+		gameObjects.push_back(std::move(gameObj));
+
+		gameObj = VeGameObject::createGameObject();
+		gameObj.model = quad;
+		gameObj.transform.translation = { 0.f, .5f, 0.f };
+		gameObj.transform.scale = glm::vec3{ 3.f, 1.0f, 3.f };
 		gameObjects.push_back(std::move(gameObj));
 	}
 
