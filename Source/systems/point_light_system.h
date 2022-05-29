@@ -9,18 +9,18 @@
 
 namespace ve
 {
-	class SimpleRenderSystem
+	class PointLightSystem
 	{
 	public:
 		static constexpr int WIDTH = 800;
 		static constexpr int HEIGHT = 600;
 
-		SimpleRenderSystem(VeDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
-		~SimpleRenderSystem();
+		PointLightSystem(VeDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+		~PointLightSystem();
 
-		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
-		SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
-		void renderGameObjects(FrameInfo& frameInfo);
+		PointLightSystem(const PointLightSystem&) = delete;
+		PointLightSystem& operator=(const PointLightSystem&) = delete;
+		void render(FrameInfo& frameInfo);
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
 		void createPipeline(VkRenderPass renderPass);

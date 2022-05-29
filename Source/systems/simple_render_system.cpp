@@ -56,7 +56,7 @@ namespace ve
 		vePipeline = std::make_unique<VePipeline>(veDevice, pipelineConfig, "compiled_shaders/simple_shader.vert.spv", "compiled_shaders/simple_shader.frag.spv");
 	}
 
-	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo, std::vector<VeGameObject>& gameObjects)
+	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
 		vePipeline->bind(frameInfo.commandBuffer);
 
@@ -68,8 +68,13 @@ namespace ve
 			pipelineLayout,
 			0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		for (VeGameObject& obj : gameObjects)
+		for (auto& kv : frameInfo.gameObjects)
 		{
+			VeGameObject& obj = kv.second;
+
+			if(obj.model == nullptr)
+				continue;
+
 			SimplePushConstantData push{};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.normalMatrix();

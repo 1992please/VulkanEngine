@@ -90,15 +90,12 @@ namespace ve
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
-        auto bindingDescriptions = VeModel::Vertex::getBindingDescriptions();
-        auto attributeDescriptions = VeModel::Vertex::getAttributeDescriptions();
-
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexAttributeDescriptionCount = attributeDescriptions.size();
-        vertexInputInfo.vertexBindingDescriptionCount = bindingDescriptions.size();
-        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+        vertexInputInfo.vertexAttributeDescriptionCount = configInfo.attributeDescriptions.size();
+        vertexInputInfo.vertexBindingDescriptionCount = configInfo.bindingDescriptions.size();
+        vertexInputInfo.pVertexAttributeDescriptions = configInfo.attributeDescriptions.data();
+        vertexInputInfo.pVertexBindingDescriptions = configInfo.bindingDescriptions.data();
 
         VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
 		colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -209,5 +206,8 @@ namespace ve
         configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
         configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
         configInfo.dynamicStateInfo.flags = 0;
+
+		configInfo.bindingDescriptions = VeModel::Vertex::getBindingDescriptions();
+		configInfo.attributeDescriptions = VeModel::Vertex::getAttributeDescriptions();
     }
 }

@@ -1,6 +1,7 @@
 #include "first_app.h"
 #include "ve_camera.h"
 #include "systems/simple_render_system.h"
+#include "systems/point_light_system.h"
 #include "keyboard_movement_controller.h"
 #include "ve_buffer.h"
 
@@ -19,7 +20,8 @@ namespace ve
 {
 	struct GlobalUbo
 	{
-		glm::mat4 projectionView{ 1.0f };
+		glm::mat4 projection{ 1.0f };
+		glm::mat4 view{ 1.0f };
 		glm::vec4 ambientLightColor{1.0, 1.0f , 1.0f, .02f}; // w is intensity
 		glm::vec3 LightPosition{-1.f};
 		alignas(16) glm::vec4 lightColor{1.f}; // w is intensity
@@ -57,7 +59,8 @@ namespace ve
 		
 		std::unique_ptr<VeDescriptorSetLayout> globalSetLayout =
 			VeDescriptorSetLayout::Builder(veDevice).
-			addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT).
+			addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT).
 			build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -70,6 +73,8 @@ namespace ve
 		}
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+		PointLightSystem pointLightSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+
 		VeCamera camera{};
 
 		auto viewerObject = VeGameObject::createGameObject();
@@ -94,12 +99,6 @@ namespace ve
 			// camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
 			camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
-
-			//for (auto& obj : gameObjects) {
-			//	obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.0001f, glm::two_pi<float>());
-			//	obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + 0.00005f, glm::two_pi<float>());
-			//}
-
             if (VkCommandBuffer commandBuffer = veRenderer.beginFrame())
             {
 				int frameIndex = veRenderer.getFrameIndex();
@@ -108,11 +107,13 @@ namespace ve
 					frameTime,
 					commandBuffer,
 					camera,
-					globalDescriptorSets[frameIndex]
+					globalDescriptorSets[frameIndex],
+					gameObjects
 				};
 				// update
 				GlobalUbo ubo{};
-				ubo.projectionView = camera.getProjection() * camera.getView();
+				ubo.projection = camera.getProjection();
+				ubo.view = camera.getView();
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
 
@@ -120,7 +121,8 @@ namespace ve
                 // render shadow casting objects
                 // end offscreen shadow pass
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
+                simpleRenderSystem.renderGameObjects(frameInfo);
+				pointLightSystem.render(frameInfo);
                 veRenderer.endSwapChainRenderPass(commandBuffer);
                 veRenderer.endFrame();
             }
@@ -141,19 +143,19 @@ namespace ve
 		gameObj.model = flat_vase;
 		gameObj.transform.translation = { -.5f, .5f, 0.f };
 		gameObj.transform.scale = glm::vec3{ 3.f, 1.5f, 3.f };
-		gameObjects.push_back(std::move(gameObj));
+		gameObjects.emplace(gameObj.getId(), std::move(gameObj));
 
 		gameObj = VeGameObject::createGameObject();
 		gameObj.model = smooth_vase;
 		gameObj.transform.translation = { .5f, .5f, 0.f };
 		gameObj.transform.scale = glm::vec3{ 3.f, 1.5f, 3.f };
-		gameObjects.push_back(std::move(gameObj));
+		gameObjects.emplace(gameObj.getId(), std::move(gameObj));
 
 		gameObj = VeGameObject::createGameObject();
 		gameObj.model = quad;
 		gameObj.transform.translation = { 0.f, .5f, 0.f };
 		gameObj.transform.scale = glm::vec3{ 3.f, 1.0f, 3.f };
-		gameObjects.push_back(std::move(gameObj));
+		gameObjects.emplace(gameObj.getId(), std::move(gameObj));
 	}
 
 }
