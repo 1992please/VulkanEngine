@@ -18,7 +18,8 @@ struct PointLight {
 
 layout(set = 0, binding = 0) uniform GlobalUbo{
     mat4 projectionMatrix;
-    mat4 ViewMatrix;
+    mat4 viewMatrix;
+    mat4 invViewMatrix;
     vec4 ambientLightColor;
     PointLight pointLights[10];
     int numLights;
@@ -34,7 +35,7 @@ void main()
 {
     fragOffset = OFFSETS[gl_VertexIndex];
 
-    vec4 lightInCameraSpace = ubo.ViewMatrix * push.position;
+    vec4 lightInCameraSpace = ubo.viewMatrix * push.position;
     vec4 positionInCamerSpace = lightInCameraSpace + push.radius * vec4(fragOffset, 0.0, 0.0);
 
     gl_Position = ubo.projectionMatrix * positionInCamerSpace;
