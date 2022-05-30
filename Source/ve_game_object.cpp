@@ -59,4 +59,20 @@ namespace ve
 			} };
 	}
 
+	VeGameObject VeGameObject::createGameObject()
+	{
+		static id_t currentId = 0;
+		return VeGameObject(currentId++);
+	}
+
+	VeGameObject VeGameObject::createPointLight(float intensity /*= 10.f*/, float radius /*= 0.1f*/, glm::vec3 color /*= glm::vec3(1.0f)*/)
+	{
+	    VeGameObject gameObj = VeGameObject::createGameObject();
+        gameObj.color = color;
+        gameObj.transform.scale.x = radius;
+        gameObj.pointLight = std::make_unique<PointLightComponent>();
+        gameObj.pointLight->lightIntensity = intensity;
+        return gameObj;
+	}
+
 }
