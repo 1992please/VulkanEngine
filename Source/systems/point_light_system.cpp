@@ -6,6 +6,7 @@
 // std
 #include <stdexcept>
 #include <array>
+#include <map>
 
 namespace ve
 {
@@ -52,12 +53,14 @@ namespace ve
 		// it's important to use the swap chain width and height as it doesn't necessarly match the window's width and height
 		PipelineConfigInfo pipelineConfig{};
 		VePipeline::defaultPipelineConfigInfo(pipelineConfig);
-		pipelineConfig.renderPass = renderPass;
-		pipelineConfig.pipelineLayout = pipelineLayout;
+		VePipeline::enableAlphaBlending(pipelineConfig);
+		pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 		pipelineConfig.attributeDescriptions.clear();
 		pipelineConfig.bindingDescriptions.clear();
 
-		pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+		pipelineConfig.renderPass = renderPass;
+		pipelineConfig.pipelineLayout = pipelineLayout;
+
 
 		vePipeline = std::make_unique<VePipeline>(veDevice, pipelineConfig, 
 			"compiled_shaders/point_light.vert.spv", 
@@ -84,6 +87,19 @@ namespace ve
 
 	void PointLightSystem::render(FrameInfo& frameInfo)
 	{
+		// sort lights
+		std::map<float, VeGameObject::id_t, std::greater<float>> sortedIds;
+		for (auto& kv : frameInfo.gameObjects)
+		{
+			auto& obj = kv.second;
+			if (obj.pointLight == nullptr) continue;
+
+			// calculate distance
+			glm::vec3 offset = frameInfo.camera.getPosition() - obj.transform.translation;
+			float disSquared = glm::dot(offset, offset);
+			sortedIds[disSquared] = obj.getId();
+		}
+
 		vePipeline->bind(frameInfo.commandBuffer);
 
 		glm::mat4 projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
@@ -94,10 +110,10 @@ namespace ve
 			pipelineLayout,
 			0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		for (auto& kv : frameInfo.gameObjects)
+		// iterate through our sorted map in reverse order
+		for (auto& kv : sortedIds)
 		{
-			auto& obj = kv.second;
-			if (obj.pointLight == nullptr) continue;
+			auto& obj = frameInfo.gameObjects.at(kv.second);
 
 			PointLightPushConstants push{};
 			push.position = glm::vec4(obj.transform.translation, 1.0f);

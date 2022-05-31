@@ -210,4 +210,27 @@ namespace ve
 		configInfo.bindingDescriptions = VeModel::Vertex::getBindingDescriptions();
 		configInfo.attributeDescriptions = VeModel::Vertex::getAttributeDescriptions();
     }
+
+    // Order-independent transparency
+	void VePipeline::enableAlphaBlending(PipelineConfigInfo& configInfo)
+	{
+		configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
+
+		configInfo.colorBlendAttachment.colorWriteMask =
+			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+			VK_COLOR_COMPONENT_A_BIT;
+
+        // fragment being drawn is the src
+        // the destination whatever values exist at that fragment in our color attachment
+        // color.rgb = <srcColorBlendFactor> * src.rgb <colorBlendOp> <dstColorBlendFactor> * dst.rgb
+        // color.a = <srcAlphaBlendFactor> * src.a <alphaBlendOp> <dstAlphaBlendFactor> * dst.a
+		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;   
+		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;  
+		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        // since we don't use the destination alpha these three values don't matter for now
+		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+	}
+
 }

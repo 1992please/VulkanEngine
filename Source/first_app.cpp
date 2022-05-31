@@ -110,7 +110,7 @@ namespace ve
 					auto& obj = kv.second;
 					if (obj.pointLight == nullptr) continue;
 
-					//obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
+					obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
 				}
 
 
@@ -128,8 +128,11 @@ namespace ve
                 // render shadow casting objects
                 // end offscreen shadow pass
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
+
+				// order here matters
                 simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
+
                 veRenderer.endSwapChainRenderPass(commandBuffer);
                 veRenderer.endFrame();
             }
