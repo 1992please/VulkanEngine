@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ve_game_object.h"
+#include "ve_components.h"
 #include "ve_window.h"
 
 namespace ve
@@ -21,7 +21,7 @@ namespace ve
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow* window, float dt, VeGameObject& gameObject);
+        void moveInPlaneXZ(GLFWwindow* window, float dt, TransformComponent& gameObject);
 
         KeyMappings keys{};
         float moveSpeed{3.f};

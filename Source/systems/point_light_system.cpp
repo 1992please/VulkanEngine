@@ -70,16 +70,16 @@ namespace ve
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo)
 	{
 		int lightIndex = 0;
-		for (auto& kv : frameInfo.gameObjects)
+		for (entity_t entity : frameInfo.entityManager.getEntities<PointLightComponent>())
 		{
-			auto& obj = kv.second;
-			if(obj.pointLight == nullptr) continue;
-
 			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
+			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
+			const PointLightComponent& pointLight = frameInfo.entityManager.GetComponent<PointLightComponent>(entity);
+
 			// copy light to ubo 
-			ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
-			ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+			ubo.pointLights[lightIndex].position = glm::vec4(transComp.translation, 1.0f);
+			ubo.pointLights[lightIndex].color = glm::vec4(pointLight.color, pointLight.lightIntensity);
 			lightIndex++;
 		}
 		ubo.numLights = lightIndex;
@@ -88,16 +88,15 @@ namespace ve
 	void PointLightSystem::render(FrameInfo& frameInfo)
 	{
 		// sort lights
-		std::map<float, VeGameObject::id_t, std::greater<float>> sortedIds;
-		for (auto& kv : frameInfo.gameObjects)
+		std::map<float, entity_t, std::greater<float>> sortedIds;
+		for (entity_t entity : frameInfo.entityManager.getEntities<PointLightComponent>())
 		{
-			auto& obj = kv.second;
-			if (obj.pointLight == nullptr) continue;
+			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
 
 			// calculate distance
-			glm::vec3 offset = frameInfo.camera.getPosition() - obj.transform.translation;
+			glm::vec3 offset = frameInfo.camera.getPosition() - transComp.translation;
 			float disSquared = glm::dot(offset, offset);
-			sortedIds[disSquared] = obj.getId();
+			sortedIds[disSquared] = entity;
 		}
 
 		vePipeline->bind(frameInfo.commandBuffer);
@@ -113,12 +112,14 @@ namespace ve
 		// iterate through our sorted map in reverse order
 		for (auto& kv : sortedIds)
 		{
-			auto& obj = frameInfo.gameObjects.at(kv.second);
+			entity_t entity = kv.second;
+			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
+			const PointLightComponent& pointLight = frameInfo.entityManager.GetComponent<PointLightComponent>(entity);
 
 			PointLightPushConstants push{};
-			push.position = glm::vec4(obj.transform.translation, 1.0f);
-			push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-			push.radius = obj.transform.scale.x;
+			push.position = glm::vec4(transComp.translation, 1.0f);
+			push.color = glm::vec4(pointLight.color, pointLight.lightIntensity);
+			push.radius = transComp.scale.x;
 
 			vkCmdPushConstants(frameInfo.commandBuffer,
 				pipelineLayout,

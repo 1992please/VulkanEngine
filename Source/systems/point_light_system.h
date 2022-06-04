@@ -2,7 +2,7 @@
 
 #include "ve_frame_info.h"
 #include "ve_pipeline.h"
-#include "ve_game_object.h"
+#include "ve_components.h"
 
 // std
 #include <memory>

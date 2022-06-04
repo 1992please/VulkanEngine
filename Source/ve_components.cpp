@@ -1,8 +1,8 @@
-#include "ve_game_object.h"
+#include "ve_components.h"
 
 namespace ve
 {
-    glm::mat4 TransformComponent::mat4()
+    glm::mat4 TransformComponent::mat4() const
     {
         const float c3 = glm::cos(rotation.z);
         const float s3 = glm::sin(rotation.z);
@@ -32,7 +32,7 @@ namespace ve
             {translation.x, translation.y, translation.z, 1.0f} };
     }
 
-	glm::mat3 TransformComponent::normalMatrix()
+	glm::mat3 TransformComponent::normalMatrix() const
 	{
 		const float c3 = glm::cos(rotation.z);
 		const float s3 = glm::sin(rotation.z);
@@ -57,22 +57,6 @@ namespace ve
                 invScale.z * (-s2),
                 invScale.z * (c1 * c2),
 			} };
-	}
-
-	VeGameObject VeGameObject::createGameObject()
-	{
-		static id_t currentId = 0;
-		return VeGameObject(currentId++);
-	}
-
-	VeGameObject VeGameObject::createPointLight(float intensity /*= 10.f*/, float radius /*= 0.1f*/, glm::vec3 color /*= glm::vec3(1.0f)*/)
-	{
-	    VeGameObject gameObj = VeGameObject::createGameObject();
-        gameObj.color = color;
-        gameObj.transform.scale.x = radius;
-        gameObj.pointLight = std::make_unique<PointLightComponent>();
-        gameObj.pointLight->lightIntensity = intensity;
-        return gameObj;
 	}
 
 }

@@ -68,16 +68,14 @@ namespace ve
 			pipelineLayout,
 			0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		for (auto& kv : frameInfo.gameObjects)
+		for (entity_t entity : frameInfo.entityManager.getEntities<RendererComponent>())
 		{
-			VeGameObject& obj = kv.second;
-
-			if(obj.model == nullptr)
-				continue;
+			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
+			const RendererComponent& renderComp = frameInfo.entityManager.GetComponent<RendererComponent>(entity);
 
 			SimplePushConstantData push{};
-			push.modelMatrix = obj.transform.mat4();
-			push.normalMatrix = obj.transform.normalMatrix();
+			push.modelMatrix = transComp.mat4();
+			push.normalMatrix = transComp.normalMatrix();
 
 			vkCmdPushConstants(
 				frameInfo.commandBuffer,
@@ -86,8 +84,8 @@ namespace ve
 				0,
 				sizeof(SimplePushConstantData),
 				&push);
-			obj.model->bind(frameInfo.commandBuffer);
-			obj.model->draw(frameInfo.commandBuffer);
+			renderComp.model->bind(frameInfo.commandBuffer);
+			renderComp.model->draw(frameInfo.commandBuffer);
 		}
 	}
 

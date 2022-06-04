@@ -4,7 +4,8 @@
 #include "ve_window.h"
 #include "ve_device.h"
 #include "ve_renderer.h"
-#include "ve_game_object.h"
+#include "ve_components.h"
+#include "ve_ecs.h"
 
 // std
 #include <memory>
@@ -25,14 +26,17 @@ namespace ve
         void run();
 
     private:
-        void loadGameObjects();
+        void initEntityManager();
+        void loadEntities();
+
+		entity_t createGameObject();
+		entity_t createPointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.0f));
 
         VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
         VeDevice veDevice{veWindow};
         VeRenderer veRenderer{ veWindow, veDevice };
 
         std::unique_ptr<VeDescriptorPool> globalPool;
-        VeGameObject::Map gameObjects;
-
+        EntityManager entityManager{ 1000 };
     };
 }
