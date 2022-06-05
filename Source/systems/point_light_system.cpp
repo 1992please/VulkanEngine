@@ -30,10 +30,10 @@ namespace ve
 
 	void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
 	{
-		 VkPushConstantRange pushConstantRange{};
-		 pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		 pushConstantRange.offset = 0; // offset field is mainly for if you are using seperate ranges for vertex and fragment shader.
-		 pushConstantRange.size = sizeof(PointLightPushConstants);
+		 //VkPushConstantRange pushConstantRange{};
+		 //pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		 //pushConstantRange.offset = 0; // offset field is mainly for if you are using seperate ranges for vertex and fragment shader.
+		 //pushConstantRange.size = sizeof(PointLightPushConstants);
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
 
@@ -41,8 +41,8 @@ namespace ve
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
-		pipelineLayoutInfo.pushConstantRangeCount = 1;
-		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;
 		if (vkCreatePipelineLayout(veDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 			throw std::runtime_error("failed to create pipeline layout!");
 	}
@@ -69,11 +69,23 @@ namespace ve
 
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo)
 	{
-		int lightIndex = 0;
+		std::map<float, entity_t, std::greater<float>> sortedIds;
 		for (entity_t entity : frameInfo.entityManager.getEntities<PointLightComponent>())
+		{
+			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
+
+			// calculate distance
+			glm::vec3 offset = frameInfo.camera.getPosition() - transComp.translation;
+			float disSquared = glm::dot(offset, offset);
+			sortedIds[disSquared] = entity;
+		}
+
+		int lightIndex = 0;
+		for (auto& kv : sortedIds)
 		{
 			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
+			entity_t entity = kv.second;
 			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
 			const PointLightComponent& pointLight = frameInfo.entityManager.GetComponent<PointLightComponent>(entity);
 
@@ -87,18 +99,6 @@ namespace ve
 
 	void PointLightSystem::render(FrameInfo& frameInfo)
 	{
-		// sort lights
-		std::map<float, entity_t, std::greater<float>> sortedIds;
-		for (entity_t entity : frameInfo.entityManager.getEntities<PointLightComponent>())
-		{
-			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
-
-			// calculate distance
-			glm::vec3 offset = frameInfo.camera.getPosition() - transComp.translation;
-			float disSquared = glm::dot(offset, offset);
-			sortedIds[disSquared] = entity;
-		}
-
 		vePipeline->bind(frameInfo.commandBuffer);
 
 		glm::mat4 projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
@@ -109,26 +109,9 @@ namespace ve
 			pipelineLayout,
 			0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		// iterate through our sorted map in reverse order
-		for (auto& kv : sortedIds)
-		{
-			entity_t entity = kv.second;
-			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
-			const PointLightComponent& pointLight = frameInfo.entityManager.GetComponent<PointLightComponent>(entity);
+		int numOfLightComps = frameInfo.entityManager.getPool<PointLightComponent>().size();
 
-			PointLightPushConstants push{};
-			push.position = glm::vec4(transComp.translation, 1.0f);
-			push.color = glm::vec4(pointLight.color, pointLight.lightIntensity);
-			push.radius = transComp.scale.x;
-
-			vkCmdPushConstants(frameInfo.commandBuffer,
-				pipelineLayout,
-				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-				0, sizeof(PointLightPushConstants), &push);
-
-			vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
-
-		}
+		vkCmdDraw(frameInfo.commandBuffer, 6 , numOfLightComps, 0, 0);
 	}
 
 }

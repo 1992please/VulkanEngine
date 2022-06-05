@@ -1,6 +1,7 @@
 #version 450
 
 layout (location = 0) in vec2 fragOffset;
+layout (location = 1) in vec3 fragColor;
 
 layout (location = 0) out vec4 outColor;
 
@@ -31,5 +32,7 @@ void main()
     float dis = sqrt(dot(fragOffset, fragOffset));
     if(dis >= 1.0)
         discard;
-    outColor = vec4(push.color.xyz, 0.5 * (cos(dis * M_PI) + 1.0));
+
+    float cosDis = 0.5 * (cos(dis * M_PI) + 1.0); // ranges from 1 -> 0
+    outColor = vec4(mix(fragColor, vec3(1.0), cosDis) , cosDis);
 }

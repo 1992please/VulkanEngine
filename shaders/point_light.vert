@@ -10,6 +10,7 @@ const vec2 OFFSETS[6] = vec2[](
 );
 
 layout(location = 0) out vec2 fragOffset;
+layout (location = 1) out vec3 fragColor;
 
 struct PointLight {
     vec4 position; // ignore w
@@ -25,18 +26,15 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
     int numLights;
 } ubo;
 
-layout(push_constant) uniform Push{
-    vec4 position;
-    vec4 color;
-    float radius;
-} push;
+const float radius = .1;
 
 void main()
 {
     fragOffset = OFFSETS[gl_VertexIndex];
+    fragColor = ubo.pointLights[gl_InstanceIndex].color.xyz;
 
-    vec4 lightInCameraSpace = ubo.viewMatrix * push.position;
-    vec4 positionInCamerSpace = lightInCameraSpace + push.radius * vec4(fragOffset, 0.0, 0.0);
+    vec4 lightInCameraSpace = ubo.viewMatrix * ubo.pointLights[gl_InstanceIndex].position;
+    vec4 positionInCamerSpace = lightInCameraSpace + radius * vec4(fragOffset, 0.0, 0.0);
 
     gl_Position = ubo.projectionMatrix * positionInCamerSpace;
 }
