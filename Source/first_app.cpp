@@ -158,6 +158,7 @@ namespace ve
 		std::shared_ptr<VeModel> flat_vase = VeModel::createModelFromFile(veDevice, "content/flat_vase.obj");
 		std::shared_ptr<VeModel> smooth_vase = VeModel::createModelFromFile(veDevice, "content/smooth_vase.obj");
 		std::shared_ptr<VeModel> quad = VeModel::createModelFromFile(veDevice, "content/quad.obj");
+		std::shared_ptr<VeModel> donut = VeModel::createModelFromFile(veDevice, "content/donut.obj");
 
 		entity_t entity = createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity).model = flat_vase;
@@ -173,6 +174,11 @@ namespace ve
 		entityManager.AddComponent<RendererComponent>(entity).model = quad;
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
+
+		entity = createGameObject();
+		entityManager.AddComponent<RendererComponent>(entity).model = donut;
+		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
+		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},
