@@ -30,6 +30,11 @@ add_subdirectory(thirdparty/tinyobjloader)
 target_link_libraries(${MainTarget} tinyobjectloader)
 set_target_properties(tinyobjectloader PROPERTIES FOLDER "${MISC_FOLDER}/Thirdparty/")
 
+# tinyobjloader
+add_subdirectory(thirdparty/stb)
+target_link_libraries(${MainTarget} stb)
+set_target_properties(stb PROPERTIES FOLDER "${MISC_FOLDER}/Thirdparty/")
+
 # set c++ standard
 set_property(TARGET ${MainTarget} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${MainTarget} PROPERTY CXX_STANDARD_REQUIRED ON)

@@ -86,6 +86,7 @@ namespace ve
 
 		stagingBuffer.map();
 		stagingBuffer.writeToBuffer((void*)vertices.data());
+		stagingBuffer.unmap();
 
 	// VK_BUFFER_USAGE_TRANSFER_DST_BIT this will be the destination of transfering data from staging buffer.
 	// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT the most optimal but it can be accessed only by a staging buffer.

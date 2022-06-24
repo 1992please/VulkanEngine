@@ -4,7 +4,8 @@
 #include "systems/point_light_system.h"
 #include "keyboard_movement_controller.h"
 #include "ve_buffer.h"
-#include <ve_ecs.h>
+#include "ve_texture.h"
+#include "ve_ecs.h"
 
 // libs
 #include <glm/gtc/constants.hpp>
@@ -53,6 +54,8 @@ namespace ve
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 			uboBuffers[i]->map();
 		}
+
+		VeTexture tex("content/texture.jpg", veDevice);
 		
 		std::unique_ptr<VeDescriptorSetLayout> globalSetLayout =
 			VeDescriptorSetLayout::Builder(veDevice).
@@ -212,5 +215,4 @@ namespace ve
 		entityManager.AddComponent<PointLightComponent>(entity) = { intensity, color };
 		return entity;
 	}
-
 }
