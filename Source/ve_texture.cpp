@@ -69,7 +69,8 @@ namespace ve
 
 	VeTexture::~VeTexture()
 	{
-
+		vkDestroyImage(veDevice.device(), textureImage, nullptr);
+		vkFreeMemory(veDevice.device(), textureImageMemory, nullptr);
 	}
 
 	VeTexture::VeTexture(glm::vec4 color, VeDevice& device)
