@@ -76,6 +76,8 @@ namespace ve
 
         void transitionImageLayout(VkImage& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
+        VkImageView createImageView(VkImage image, VkFormat format);
+
         VkPhysicalDeviceProperties properties;
 
     private:

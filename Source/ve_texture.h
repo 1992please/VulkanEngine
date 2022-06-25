@@ -21,10 +21,17 @@ namespace ve
 		VeTexture& operator=(const VeTexture&) = delete;
 
 	private:
+		void createImage();
+		void createImageView();
+		void createSampler();
 
+		std::string imagePath;
 		VeDevice& veDevice;
-		VkImage textureImage;
-		VkDeviceMemory textureImageMemory;
+		VkImage image;
+		VkDeviceMemory imageMemory;
+
+		VkImageView imageView;
+		VkSampler sampler;
 	};
 }
 
