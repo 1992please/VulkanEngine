@@ -19,6 +19,7 @@ namespace ve {
 		layoutBinding.descriptorType = descriptorType;
 		layoutBinding.descriptorCount = count;
 		layoutBinding.stageFlags = stageFlags;
+		layoutBinding.pImmutableSamplers = nullptr;
 		bindings[binding] = layoutBinding;
 		return *this;
 	}

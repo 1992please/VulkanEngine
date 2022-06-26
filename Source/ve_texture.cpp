@@ -14,6 +14,16 @@ namespace ve
 	{
 		createImage();
 		createImageView();
+		createSampler();
+	}
+
+	VkDescriptorImageInfo VeTexture::descriptorInfo()
+	{
+		return VkDescriptorImageInfo{
+			sampler,
+			imageView,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
 	}
 
 	void VeTexture::createImage()

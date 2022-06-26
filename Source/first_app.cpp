@@ -27,9 +27,10 @@ namespace ve
 	{
 
 		globalPool = VeDescriptorPool::Builder(veDevice).
-			setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT). // for now we only need one uniform buffer descriptor for each frame so we need for now only two descriptor sets.
-			addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT).
-			build();
+			setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT * 2) // for now we only need one uniform buffer descriptor for each frame so we need for now only two descriptor sets.
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
+			.build();
 
 		initEntityManager();
 
@@ -54,22 +55,22 @@ namespace ve
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 			uboBuffers[i]->map();
 		}
-
-		VeTexture tex("content/texture.jpg", veDevice);
 		
 		std::unique_ptr<VeDescriptorSetLayout> globalSetLayout =
-			VeDescriptorSetLayout::Builder(veDevice).
-			addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 
-				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT).
-			build();
+			VeDescriptorSetLayout::Builder(veDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < globalDescriptorSets.size(); i++)
 		{
 			VkDescriptorBufferInfo bufferInfo = uboBuffers[i]->descriptorInfo();
-			VeDescriptorWriter(*globalSetLayout, *globalPool).
-				writeBuffer(0, &bufferInfo).
-				build(globalDescriptorSets[i]);
+			//VkDescriptorImageInfo imageInfo = tex->descriptorInfo();
+			VeDescriptorWriter(*globalSetLayout, *globalPool)
+				.writeBuffer(0, &bufferInfo)
+				//.writeImage(1, &imageInfo)
+				.build(globalDescriptorSets[i]);
 		}
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
@@ -163,6 +164,8 @@ namespace ve
 		std::shared_ptr<VeModel> quad = VeModel::createModelFromFile(veDevice, "content/quad.obj");
 		std::shared_ptr<VeModel> donut = VeModel::createModelFromFile(veDevice, "content/donut.obj");
 
+		std::shared_ptr<VeTexture> tex = std::make_shared<VeTexture>("content/texture.jpg", veDevice);
+
 		entity_t entity = createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity).model = flat_vase;
 		entityManager.GetComponent<TransformComponent>(entity).translation = { -.5f, .5f, 0.f };
@@ -174,7 +177,7 @@ namespace ve
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
 		entity = createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity).model = quad;
+		entityManager.AddComponent<RendererComponent>(entity) = { quad, tex };
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
 
@@ -182,6 +185,8 @@ namespace ve
 		entityManager.AddComponent<RendererComponent>(entity).model = donut;
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
+
+
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},

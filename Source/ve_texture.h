@@ -19,7 +19,7 @@ namespace ve
 
 		VeTexture(const VeTexture&) = delete;
 		VeTexture& operator=(const VeTexture&) = delete;
-
+		VkDescriptorImageInfo descriptorInfo();
 	private:
 		void createImage();
 		void createImageView();

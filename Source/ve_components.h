@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ve_model.h"
+#include "ve_texture.h"
 #include "ve_ecs.h"
 
 // libs
@@ -40,5 +41,6 @@ namespace ve
     struct RendererComponent
     {
         std::shared_ptr<VeModel> model;
+		std::shared_ptr<VeTexture> texture;
     };
 }
