@@ -74,7 +74,13 @@ namespace ve
             VkImage &image,
             VkDeviceMemory &imageMemory);
 
-        void transitionImageLayout(VkImage& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void transitionImageLayout(
+			VkImage image,
+			VkFormat format,
+			VkImageLayout oldLayout,
+			VkImageLayout newLayout,
+			uint32_t mipLevels = 1,
+			uint32_t layerCount = 1);
 
         VkImageView createImageView(VkImage image, VkFormat format);
 

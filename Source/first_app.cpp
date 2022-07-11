@@ -2,6 +2,8 @@
 #include "ve_camera.h"
 #include "systems/simple_render_system.h"
 #include "systems/point_light_system.h"
+#include "systems/textured_render_system.h"
+
 #include "keyboard_movement_controller.h"
 #include "ve_buffer.h"
 #include "ve_texture.h"
@@ -27,10 +29,20 @@ namespace ve
 	{
 
 		globalPool = VeDescriptorPool::Builder(veDevice).
-			setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT * 2) // for now we only need one uniform buffer descriptor for each frame so we need for now only two descriptor sets.
+			setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT) // for now we only need one uniform buffer descriptor for each frame so we need for now only two descriptor sets.
 			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
-			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
 			.build();
+
+		framePools.resize(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+		auto framePoolBuilder = VeDescriptorPool::Builder(veDevice)
+			.setMaxSets(1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
+			.setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+
+		for (int i = 0; i < framePools.size(); i++)
+			framePools[i] = framePoolBuilder.build();
 
 		initEntityManager();
 
@@ -59,7 +71,6 @@ namespace ve
 		std::unique_ptr<VeDescriptorSetLayout> globalSetLayout =
 			VeDescriptorSetLayout::Builder(veDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -69,11 +80,11 @@ namespace ve
 			//VkDescriptorImageInfo imageInfo = tex->descriptorInfo();
 			VeDescriptorWriter(*globalSetLayout, *globalPool)
 				.writeBuffer(0, &bufferInfo)
-				//.writeImage(1, &imageInfo)
 				.build(globalDescriptorSets[i]);
 		}
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+		TexturedRenderSystem textureRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 		PointLightSystem pointLightSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 
 		VeCamera camera{};
@@ -103,12 +114,16 @@ namespace ve
             if (VkCommandBuffer commandBuffer = veRenderer.beginFrame())
             {
 				int frameIndex = veRenderer.getFrameIndex();
+
+				framePools[frameIndex]->resetPool();
+
 				FrameInfo frameInfo{
 					frameIndex,
 					frameTime,
 					commandBuffer,
 					camera,
 					globalDescriptorSets[frameIndex],
+					*framePools[frameIndex],
 					entityManager
 				};
 				// update
@@ -136,6 +151,7 @@ namespace ve
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
 
 				// order here matters
+				textureRenderSystem.renderGameObjects(frameInfo);
                 simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
 
@@ -164,7 +180,9 @@ namespace ve
 		std::shared_ptr<VeModel> quad = VeModel::createModelFromFile(veDevice, "content/quad.obj");
 		std::shared_ptr<VeModel> donut = VeModel::createModelFromFile(veDevice, "content/donut.obj");
 
-		std::shared_ptr<VeTexture> tex = std::make_shared<VeTexture>("content/texture.jpg", veDevice);
+		std::shared_ptr<VeTexture> tex = std::make_shared<VeTexture>(veDevice, "content/texture.jpg");
+		std::shared_ptr<VeTexture> icing = std::make_shared<VeTexture>(veDevice, "content/icing.png");
+		std::shared_ptr<VeTexture> nada = std::make_shared<VeTexture>(veDevice, "content/nada.jpg");
 
 		entity_t entity = createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity).model = flat_vase;
@@ -177,12 +195,12 @@ namespace ve
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
 		entity = createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity) = { quad, tex };
+		entityManager.AddComponent<RendererComponent>(entity) = { quad, nada };
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
 
 		entity = createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity).model = donut;
+		entityManager.AddComponent<RendererComponent>(entity) = { donut, icing };
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
 

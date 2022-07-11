@@ -41,6 +41,6 @@ namespace ve
     struct RendererComponent
     {
         std::shared_ptr<VeModel> model;
-		std::shared_ptr<VeTexture> texture;
+		std::shared_ptr<VeTexture> diffuseMap;
     };
 }

@@ -37,6 +37,7 @@ namespace ve
         VeRenderer veRenderer{ veWindow, veDevice };
 
         std::unique_ptr<VeDescriptorPool> globalPool;
+        std::vector<std::unique_ptr<VeDescriptorPool>> framePools;
         EntityManager entityManager{ 1000 };
     };
 }

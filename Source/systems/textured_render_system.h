@@ -29,5 +29,6 @@ namespace ve
 
 		std::unique_ptr<VePipeline> vePipeline;
 		VkPipelineLayout pipelineLayout;
+		std::unique_ptr<VeDescriptorSetLayout> renderSystemLayout;
 	};
 }

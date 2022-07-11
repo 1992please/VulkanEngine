@@ -9,7 +9,7 @@
 
 namespace ve
 {
-	struct  SimplePushConstantData
+	struct  TexturePushConstantData
 	{
 		glm::mat4 modelMatrix{ 1.0f };
 		glm::mat4 normalMatrix{ 1.0f };
@@ -31,7 +31,7 @@ namespace ve
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0; // offset field is mainly for if you are using seperate ranges for vertex and fragment shader.
-		pushConstantRange.size = sizeof(SimplePushConstantData);
+		pushConstantRange.size = sizeof(TexturePushConstantData);
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
 
@@ -73,7 +73,9 @@ namespace ve
 			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
 			const RendererComponent& renderComp = frameInfo.entityManager.GetComponent<RendererComponent>(entity);
 
-			SimplePushConstantData push{};
+			if(renderComp.diffuseMap != nullptr) continue;
+
+			TexturePushConstantData push{};
 			push.modelMatrix = transComp.mat4();
 			push.normalMatrix = transComp.normalMatrix();
 
@@ -82,7 +84,7 @@ namespace ve
 				pipelineLayout,
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
-				sizeof(SimplePushConstantData),
+				sizeof(TexturePushConstantData),
 				&push);
 			renderComp.model->bind(frameInfo.commandBuffer);
 			renderComp.model->draw(frameInfo.commandBuffer);
