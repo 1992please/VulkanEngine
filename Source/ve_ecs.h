@@ -4,26 +4,33 @@
 #include <glm/glm.hpp>
 
 // std
+#include <memory>
 #include <unordered_set>
 #include <unordered_map>
 #include <cassert>
 
+namespace internal
+{
+	struct FInternalComponentID
+	{
+		static int32_t GetNextComponentIDType()
+		{
+			static int32_t ComponentTypeID = 0;
+			return ComponentTypeID++;
+		}
+	};
+}
+
 namespace ve
 {
 	typedef int32_t entity_t;
-
-	static int32_t GetNextComponentIDType()
-	{
-		static int32_t ComponentTypeID = 0;
-		return ComponentTypeID++;
-	}
 
 	template<typename ComponentType>
 	struct ComponentTypeSquence
 	{
 		static int32_t value()
 		{
-			static const int32_t TypeValue = GetNextComponentIDType();
+			static const int32_t TypeValue = internal::FInternalComponentID::GetNextComponentIDType();
 			return TypeValue;
 		}
 	};
@@ -354,6 +361,11 @@ namespace ve
 				curr = entities[curr];
 
 			return out;
+		}
+
+		int32_t capacity() const
+		{
+			return entities.size();
 		}
 
 	public:

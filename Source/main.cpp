@@ -1,5 +1,4 @@
 #include "first_app.h"
-
 // std
 #include <cstdlib>
 #include <iostream>
@@ -7,7 +6,6 @@
 int main()
 {
     ve::FirstApp app;
-
     try
     {
         app.run();

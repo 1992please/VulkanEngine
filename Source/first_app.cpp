@@ -7,8 +7,7 @@
 #include "keyboard_movement_controller.h"
 #include "ve_buffer.h"
 #include "ve_texture.h"
-#include "ve_ecs.h"
-
+#include "ve_components.h"
 // libs
 #include <glm/gtc/constants.hpp>
 
@@ -23,11 +22,8 @@
 
 namespace ve
 {
-
-
 	FirstApp::FirstApp()
 	{
-
 		globalPool = VeDescriptorPool::Builder(veDevice).
 			setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT) // for now we only need one uniform buffer descriptor for each frame so we need for now only two descriptor sets.
 			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -44,8 +40,6 @@ namespace ve
 		for (int i = 0; i < framePools.size(); i++)
 			framePools[i] = framePoolBuilder.build();
 
-		initEntityManager();
-
 		loadEntities();
 	}
 
@@ -57,6 +51,7 @@ namespace ve
 	void FirstApp::run()
     {
 		std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
+
 		for (int i = 0; i < uboBuffers.size(); i++)
 		{
 			uboBuffers[i] = std::make_unique<VeBuffer>(
@@ -124,7 +119,7 @@ namespace ve
 					camera,
 					globalDescriptorSets[frameIndex],
 					*framePools[frameIndex],
-					entityManager
+					objectManager.entityManager
 				};
 				// update
 				glm::mat4 rotateLight = glm::rotate(glm::mat4(1.0f), frameInfo.frameTime, { 0.f, -1.f, 0.f });
@@ -165,16 +160,9 @@ namespace ve
         vkDeviceWaitIdle(veDevice.device());
     }
 
-	void FirstApp::initEntityManager()
-	{
-		entityManager.registerComponent<TransformComponent>(100);
-		entityManager.registerComponent<TagComponent>(100);
-		entityManager.registerComponent<PointLightComponent>(20);
-		entityManager.registerComponent<RendererComponent>(20);
-	}
-
 	void FirstApp::loadEntities()
 	{
+		EntityManager& entityManager = objectManager.entityManager;
 		std::shared_ptr<VeModel> flat_vase = VeModel::createModelFromFile(veDevice, "content/flat_vase.obj");
 		std::shared_ptr<VeModel> smooth_vase = VeModel::createModelFromFile(veDevice, "content/smooth_vase.obj");
 		std::shared_ptr<VeModel> quad = VeModel::createModelFromFile(veDevice, "content/quad.obj");
@@ -184,22 +172,22 @@ namespace ve
 		std::shared_ptr<VeTexture> icing = std::make_shared<VeTexture>(veDevice, "content/icing.png");
 		std::shared_ptr<VeTexture> nada = std::make_shared<VeTexture>(veDevice, "content/nada.jpg");
 
-		entity_t entity = createGameObject();
+		entity_t entity = objectManager.createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity).model = flat_vase;
 		entityManager.GetComponent<TransformComponent>(entity).translation = { -.5f, .5f, 0.f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
-		entity = createGameObject();
+		entity = objectManager.createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity).model = smooth_vase;
 		entityManager.GetComponent<TransformComponent>(entity).translation = { .5f, .5f, 0.f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
-		entity = createGameObject();
+		entity = objectManager.createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity) = { quad, nada };
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
 
-		entity = createGameObject();
+		entity = objectManager.createGameObject();
 		entityManager.AddComponent<RendererComponent>(entity) = { donut, icing };
 		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
 		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
@@ -217,25 +205,10 @@ namespace ve
 
 		for (int i = 0; i < lightColors.size(); i++)
 		{
-			entity_t pointLight = createPointLight(0.2f, .1f, lightColors[i]);
+			entity_t pointLight = objectManager.createPointLight(0.2f, .1f, lightColors[i]);
 			glm::mat4 rotateLight = glm::rotate(glm::mat4(1.0f), (i * glm::two_pi<float>()) / lightColors.size(), { 0.f, -1.f, 0.f });
 			entityManager.GetComponent<TransformComponent>(pointLight).translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -.1f, 1.f));
 		}
 	}
 
-	entity_t FirstApp::createGameObject()
-	{
-		entity_t entity = entityManager.createEntity();
-		entityManager.AddComponent<TransformComponent>(entity);
-		entityManager.AddComponent<TagComponent>(entity);
-		return entity;
-	}
-
-	entity_t FirstApp::createPointLight(float intensity /*= 10.f*/, float radius /*= 0.1f*/, glm::vec3 color /*= glm::vec3(1.0f)*/)
-	{
-		entity_t entity = createGameObject();
-		entityManager.GetComponent<TransformComponent>(entity).scale.x = radius;
-		entityManager.AddComponent<PointLightComponent>(entity) = { intensity, color };
-		return entity;
-	}
 }

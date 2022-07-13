@@ -3,6 +3,7 @@
 #include "ve_camera.h"
 #include "ve_components.h"
 #include "ve_descriptors.h"
+#include "ve_ecs.h"
 
 // lib
 #include <vulkan/vulkan.h>

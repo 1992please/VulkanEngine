@@ -2,7 +2,6 @@
 
 #include "ve_model.h"
 #include "ve_texture.h"
-#include "ve_ecs.h"
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
