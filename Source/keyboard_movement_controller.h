@@ -21,7 +21,7 @@ namespace ve
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow* window, float dt, TransformComponent& gameObject);
+        void moveInPlaneXZ(GLFWwindow* window, float dt, TransformComponent& objectTrans);
 
         KeyMappings keys{};
         float moveSpeed{3.f};

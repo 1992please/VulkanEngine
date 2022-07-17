@@ -174,7 +174,14 @@ namespace ve
 	 * @param index Used in offset calculation
 	 *
 	 */
-	VkResult VeBuffer::flushIndex(int index) { return flush(alignmentSize, index * alignmentSize); }
+	VkResult VeBuffer::flushIndex(int index) { 
+		assert(
+			alignmentSize % veDevice.properties.limits.nonCoherentAtomSize == 0 &&
+			"Cannot use LveBuffer::flushIndex if alignmentSize isn't a multiple of Device Limits "
+			"nonCoherentAtomSize");
+
+		return flush(alignmentSize, index * alignmentSize); 
+	}
 
 	/**
 	 * Create a buffer info descriptor

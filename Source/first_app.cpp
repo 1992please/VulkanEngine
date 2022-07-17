@@ -78,8 +78,11 @@ namespace ve
 				.build(globalDescriptorSets[i]);
 		}
 
+		std::cout << "Alignment: " << veDevice.properties.limits.minUniformBufferOffsetAlignment << "\n";
+		std::cout << "atom size: " << veDevice.properties.limits.nonCoherentAtomSize << "\n";
+
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
-		TexturedRenderSystem textureRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+		// TexturedRenderSystem textureRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 		PointLightSystem pointLightSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 
 		VeCamera camera{};
@@ -119,8 +122,9 @@ namespace ve
 					camera,
 					globalDescriptorSets[frameIndex],
 					*framePools[frameIndex],
-					objectManager.entityManager
+					objectManager
 				};
+
 				// update
 				glm::mat4 rotateLight = glm::rotate(glm::mat4(1.0f), frameInfo.frameTime, { 0.f, -1.f, 0.f });
 				for (entity_t entity : frameInfo.entityManager.getEntities<PointLightComponent>())
@@ -138,7 +142,7 @@ namespace ve
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
 
-
+				objectManager.updateBuffer(frameIndex);
 
                 // begin offscreen shadow pass
                 // render shadow casting objects
@@ -146,7 +150,7 @@ namespace ve
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
 
 				// order here matters
-				textureRenderSystem.renderGameObjects(frameInfo);
+				// textureRenderSystem.renderGameObjects(frameInfo);
                 simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
 
@@ -162,7 +166,6 @@ namespace ve
 
 	void FirstApp::loadEntities()
 	{
-		EntityManager& entityManager = objectManager.entityManager;
 		std::shared_ptr<VeModel> flat_vase = VeModel::createModelFromFile(veDevice, "content/flat_vase.obj");
 		std::shared_ptr<VeModel> smooth_vase = VeModel::createModelFromFile(veDevice, "content/smooth_vase.obj");
 		std::shared_ptr<VeModel> quad = VeModel::createModelFromFile(veDevice, "content/quad.obj");
@@ -172,25 +175,25 @@ namespace ve
 		std::shared_ptr<VeTexture> icing = std::make_shared<VeTexture>(veDevice, "content/icing.png");
 		std::shared_ptr<VeTexture> nada = std::make_shared<VeTexture>(veDevice, "content/nada.jpg");
 
-		entity_t entity = objectManager.createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity).model = flat_vase;
-		entityManager.GetComponent<TransformComponent>(entity).translation = { -.5f, .5f, 0.f };
-		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
+		entity_t entity = objectManager.createObject();
+		objectManager.AddComponent<RendererComponent>(entity).model = flat_vase;
+		objectManager.GetComponent<TransformComponent>(entity).translation = { -.5f, .5f, 0.f };
+		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
-		entity = objectManager.createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity).model = smooth_vase;
-		entityManager.GetComponent<TransformComponent>(entity).translation = { .5f, .5f, 0.f };
-		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
+		entity = objectManager.createObject();
+		objectManager.AddComponent<RendererComponent>(entity).model = smooth_vase;
+		objectManager.GetComponent<TransformComponent>(entity).translation = { .5f, .5f, 0.f };
+		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
-		entity = objectManager.createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity) = { quad, nada };
-		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
-		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
+		entity = objectManager.createObject();
+		objectManager.AddComponent<RendererComponent>(entity) = { quad, nada };
+		objectManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
+		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
 
-		entity = objectManager.createGameObject();
-		entityManager.AddComponent<RendererComponent>(entity) = { donut, icing };
-		entityManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
-		entityManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
+		entity = objectManager.createObject();
+		objectManager.AddComponent<RendererComponent>(entity) = { donut, icing };
+		objectManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
+		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
 
 
 
@@ -207,7 +210,7 @@ namespace ve
 		{
 			entity_t pointLight = objectManager.createPointLight(0.2f, .1f, lightColors[i]);
 			glm::mat4 rotateLight = glm::rotate(glm::mat4(1.0f), (i * glm::two_pi<float>()) / lightColors.size(), { 0.f, -1.f, 0.f });
-			entityManager.GetComponent<TransformComponent>(pointLight).translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -.1f, 1.f));
+			objectManager.GetComponent<TransformComponent>(pointLight).translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -.1f, 1.f));
 		}
 	}
 

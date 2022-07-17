@@ -9,7 +9,7 @@
 
 namespace ve
 {
-	struct  TexturePushConstantData
+	struct  SimplePushConstantData
 	{
 		glm::mat4 modelMatrix{ 1.0f };
 		glm::mat4 normalMatrix{ 1.0f };
@@ -31,9 +31,13 @@ namespace ve
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0; // offset field is mainly for if you are using seperate ranges for vertex and fragment shader.
-		pushConstantRange.size = sizeof(TexturePushConstantData);
+		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
+		renderSystemLayout = VeDescriptorSetLayout::Builder(veDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
+
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout, renderSystemLayout->getDescriptorSetLayout() };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -72,10 +76,25 @@ namespace ve
 		{
 			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
 			const RendererComponent& renderComp = frameInfo.entityManager.GetComponent<RendererComponent>(entity);
+			VkDescriptorBufferInfo bufferInfo = frameInfo.entityManager.getBufferInfoForGameObject(frameInfo.frameIndex, entity);
 
-			if(renderComp.diffuseMap != nullptr) continue;
+			VkDescriptorSet objectDescriptorSet;
 
-			TexturePushConstantData push{};
+			VeDescriptorWriter(*renderSystemLayout, frameInfo.frameDescriptorPool)
+				.writeBuffer(0, &bufferInfo)
+				.build(objectDescriptorSet);
+
+			vkCmdBindDescriptorSets(
+				frameInfo.commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipelineLayout,
+				1,  // starting set (0 is the globalDescriptorSet, 1 is the set specific to this system)
+				1,  // set count
+				&objectDescriptorSet,
+				0,
+				nullptr);
+
+			SimplePushConstantData push{};
 			push.modelMatrix = transComp.mat4();
 			push.normalMatrix = transComp.normalMatrix();
 
@@ -84,7 +103,7 @@ namespace ve
 				pipelineLayout,
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
-				sizeof(TexturePushConstantData),
+				sizeof(SimplePushConstantData),
 				&push);
 			renderComp.model->bind(frameInfo.commandBuffer);
 			renderComp.model->draw(frameInfo.commandBuffer);

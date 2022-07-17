@@ -11,35 +11,35 @@ namespace ve
 		glm::mat4 normalMatrix{ 1.f };
 	};
 
-	VeObjectManager::VeObjectManager(VeDevice& device)
+	VeObjectManager::VeObjectManager(VeDevice& device) : EntityManager(VeObjectManager::MAX_OBJECTS)
 	{
 		initEntityManager();
 		initBuffer(device);
 	}
 
-	entity_t VeObjectManager::createGameObject()
+	entity_t VeObjectManager::createObject()
 	{
-		assert(entityManager.capacity() <= VeObjectManager::MAX_OBJECTS && "Adding more object than the max objects allowed.");
-		entity_t entity = entityManager.createEntity();
-		entityManager.AddComponent<TransformComponent>(entity);
-		entityManager.AddComponent<TagComponent>(entity);
+		assert(capacity() <= VeObjectManager::MAX_OBJECTS && "Adding more object than the max objects allowed.");
+		entity_t entity = createEntity();
+		AddComponent<TransformComponent>(entity);
+		AddComponent<TagComponent>(entity);
 		return entity;
 	}
 
 	entity_t VeObjectManager::createPointLight(float intensity /*= 10.f*/, float radius /*= 0.1f*/, glm::vec3 color /*= glm::vec3(1.0f)*/)
 	{
-		entity_t entity = createGameObject();
-		entityManager.GetComponent<TransformComponent>(entity).scale.x = radius;
-		entityManager.AddComponent<PointLightComponent>(entity) = { intensity, color };
+		entity_t entity = createObject();
+		GetComponent<TransformComponent>(entity).scale.x = radius;
+		AddComponent<PointLightComponent>(entity) = { intensity, color };
 		return entity;
 	}
 
 	void VeObjectManager::initEntityManager()
 	{
-		entityManager.registerComponent<TransformComponent>(100);
-		entityManager.registerComponent<TagComponent>(100);
-		entityManager.registerComponent<PointLightComponent>(20);
-		entityManager.registerComponent<RendererComponent>(20);
+		registerComponent<TransformComponent>(100);
+		registerComponent<TagComponent>(100);
+		registerComponent<PointLightComponent>(20);
+		registerComponent<RendererComponent>(20);
 	}
 
 	void VeObjectManager::initBuffer(VeDevice& device)
@@ -64,9 +64,9 @@ namespace ve
 	{
 		// copy model matrix and normal matrix for each gameObj into
 		// buffer for this frame
-		for (entity_t entity : entityManager.getEntities<TransformComponent>())
+		for (entity_t entity : getEntities<TransformComponent>())
 		{
-			TransformComponent& transComp = entityManager.GetComponent<TransformComponent>(entity);
+			TransformComponent& transComp = GetComponent<TransformComponent>(entity);
 			ObjectBufferData data{};
 			data.modelMatrix = transComp.mat4();
 			data.normalMatrix = transComp.normalMatrix();

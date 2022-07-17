@@ -23,6 +23,11 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
     int numLights;
 } ubo;
 
+layout(set = 1, binding = 0) uniform ObjectBufferData {
+  mat4 modelMatrix;
+  mat4 normalMatrix;
+} object;
+
 layout(push_constant) uniform Push{
     mat4 modelMatrix;
     mat3 normalMatrix;
@@ -30,9 +35,9 @@ layout(push_constant) uniform Push{
 
 void main()
 {
-    vec4 positionWorld = push.modelMatrix * vec4(position, 1.0);
+    vec4 positionWorld = object.modelMatrix * vec4(position, 1.0);
     gl_Position = ubo.projectionMatrix * ubo.viewMatrix * positionWorld;
-    fragNormalWorld = normalize(mat3(push.normalMatrix) * normal);
+    fragNormalWorld = normalize(mat3(object.normalMatrix) * normal);
     fragPosWorld = positionWorld.xyz;
     fragColor = color;
 }

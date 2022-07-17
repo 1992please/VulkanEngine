@@ -3,7 +3,7 @@
 #include "ve_camera.h"
 #include "ve_components.h"
 #include "ve_descriptors.h"
-#include "ve_ecs.h"
+#include "ve_object_manager.h"
 
 // lib
 #include <vulkan/vulkan.h>
@@ -36,7 +36,7 @@ namespace ve
         VeCamera& camera;
         VkDescriptorSet globalDescriptorSet;
         VeDescriptorPool& frameDescriptorPool;
-        EntityManager& entityManager;
+        VeObjectManager& entityManager;
     };
 
 }
