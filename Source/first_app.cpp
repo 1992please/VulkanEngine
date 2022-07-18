@@ -2,7 +2,6 @@
 #include "ve_camera.h"
 #include "systems/simple_render_system.h"
 #include "systems/point_light_system.h"
-#include "systems/textured_render_system.h"
 
 #include "keyboard_movement_controller.h"
 #include "ve_buffer.h"
@@ -82,7 +81,6 @@ namespace ve
 		std::cout << "atom size: " << veDevice.properties.limits.nonCoherentAtomSize << "\n";
 
 		SimpleRenderSystem simpleRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
-		// TexturedRenderSystem textureRenderSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 		PointLightSystem pointLightSystem{ veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 
 		VeCamera camera{};
@@ -150,7 +148,6 @@ namespace ve
                 veRenderer.beginSwapChainRenderPass(commandBuffer);
 
 				// order here matters
-				// textureRenderSystem.renderGameObjects(frameInfo);
                 simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
 
@@ -175,23 +172,19 @@ namespace ve
 		std::shared_ptr<VeTexture> icing = std::make_shared<VeTexture>(veDevice, "content/icing.png");
 		std::shared_ptr<VeTexture> nada = std::make_shared<VeTexture>(veDevice, "content/nada.jpg");
 
-		entity_t entity = objectManager.createObject();
-		objectManager.AddComponent<RendererComponent>(entity).model = flat_vase;
+		entity_t entity = objectManager.createMeshObject(flat_vase);
 		objectManager.GetComponent<TransformComponent>(entity).translation = { -.5f, .5f, 0.f };
 		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
-		entity = objectManager.createObject();
-		objectManager.AddComponent<RendererComponent>(entity).model = smooth_vase;
+		entity = objectManager.createMeshObject(smooth_vase);
 		objectManager.GetComponent<TransformComponent>(entity).translation = { .5f, .5f, 0.f };
 		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.5f, 3.f };
 
-		entity = objectManager.createObject();
-		objectManager.AddComponent<RendererComponent>(entity) = { quad, nada };
+		entity = objectManager.createMeshObject(quad, nada);
 		objectManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 0.f };
 		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ 3.f, 1.0f, 3.f };
 
-		entity = objectManager.createObject();
-		objectManager.AddComponent<RendererComponent>(entity) = { donut, icing };
+		entity = objectManager.createMeshObject(donut, icing);
 		objectManager.GetComponent<TransformComponent>(entity).translation = { 0.f, .5f, 2.0f };
 		objectManager.GetComponent<TransformComponent>(entity).scale = glm::vec3{ .5f };
 

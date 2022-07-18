@@ -35,6 +35,7 @@ namespace ve
 
 		renderSystemLayout = VeDescriptorSetLayout::Builder(veDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout, renderSystemLayout->getDescriptorSetLayout() };
@@ -76,12 +77,16 @@ namespace ve
 		{
 			const TransformComponent& transComp = frameInfo.entityManager.GetComponent<TransformComponent>(entity);
 			const RendererComponent& renderComp = frameInfo.entityManager.GetComponent<RendererComponent>(entity);
+
+
+			// writing descriptor set each frame can slow performance
+			// would be more efficient to implement some sort of caching
 			VkDescriptorBufferInfo bufferInfo = frameInfo.entityManager.getBufferInfoForGameObject(frameInfo.frameIndex, entity);
-
+			VkDescriptorImageInfo imageInfo = renderComp.diffuseMap->getImageInfo();
 			VkDescriptorSet objectDescriptorSet;
-
 			VeDescriptorWriter(*renderSystemLayout, frameInfo.frameDescriptorPool)
 				.writeBuffer(0, &bufferInfo)
+				.writeImage(1, &imageInfo)
 				.build(objectDescriptorSet);
 
 			vkCmdBindDescriptorSets(

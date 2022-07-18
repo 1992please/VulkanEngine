@@ -15,6 +15,7 @@ namespace ve
 	{
 		initEntityManager();
 		initBuffer(device);
+		textureDefault = std::make_shared<VeTexture>(device, "content/textures/missing.png");
 	}
 
 	entity_t VeObjectManager::createObject()
@@ -23,6 +24,15 @@ namespace ve
 		entity_t entity = createEntity();
 		AddComponent<TransformComponent>(entity);
 		AddComponent<TagComponent>(entity);
+		return entity;
+	}
+
+	ve::entity_t VeObjectManager::createMeshObject(std::shared_ptr<VeModel> model, std::shared_ptr<VeTexture> diffuseMap /*= nullptr*/)
+	{
+		entity_t entity = createObject();
+		if (!diffuseMap)
+			diffuseMap = textureDefault;
+		AddComponent<RendererComponent>(entity) = { model, diffuseMap };
 		return entity;
 	}
 
